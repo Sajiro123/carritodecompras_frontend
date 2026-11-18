@@ -1,0 +1,29 @@
+@if (error()) {
+  <p class="error-box">{{ error() }}</p>
+} @else if (order(); as o) {
+  <div class="success-card">
+    <span class="pill">Pedido #{{ o.id }} confirmado</span>
+    <h1>¡Gracias por tu compra, {{ o.customerName }}!</h1>
+    <p class="muted">
+      Enviaremos tu pedido a <strong>{{ o.address }}</strong> ({{ o.customerEmail }}).
+    </p>
+
+    <ul>
+      @for (item of o.items; track item.productId) {
+        <li>
+          <span>{{ item.quantity }} x {{ item.productName }}</span>
+          <strong>{{ item.unitPrice * item.quantity | currency: 'PEN ' }}</strong>
+        </li>
+      }
+    </ul>
+
+    <div class="total">
+      <span>Total</span>
+      <strong>{{ o.total | currency: 'PEN ' }}</strong>
+    </div>
+
+    <a class="btn-primary" routerLink="/">Volver a la tienda</a>
+  </div>
+} @else {
+  <p>Cargando pedido...</p>
+}

@@ -1,0 +1,65 @@
+.navbar {
+  background: #0f172a;
+  color: #fff;
+  padding: 0 20px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.navbar__inner {
+  max-width: 1040px;
+  margin: 0 auto;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.brand {
+  color: #fff;
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+
+  a {
+    color: #e2e8f0;
+    text-decoration: none;
+    font-weight: 500;
+
+    &:hover {
+      color: #fff;
+    }
+  }
+}
+
+.cart-pill {
+  background: #1d4ed8;
+  color: #fff !important;
+  padding: 8px 14px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.badge {
+  background: #fff;
+  color: #1d4ed8;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 0.85rem;
+}
+
+.container {
+  max-width: 1040px;
+  margin: 28px auto;
+  padding: 0 20px 48px;
+}

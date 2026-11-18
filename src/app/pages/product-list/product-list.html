@@ -1,0 +1,35 @@
+<div class="header-row">
+  <h1>Productos</h1>
+  @if (addedMessage()) {
+    <span class="toast">{{ addedMessage() }}</span>
+  }
+</div>
+
+@if (loading()) {
+  <p class="muted">Cargando productos...</p>
+}
+
+@if (error()) {
+  <p class="error-box">{{ error() }}</p>
+}
+
+<div class="grid">
+  @for (product of products(); track product.id) {
+    <article class="card">
+      @if (product.imageUrl) {
+        <img [src]="product.imageUrl" [alt]="product.name" />
+      }
+      <div class="card-body">
+        <h3>{{ product.name }}</h3>
+        <p class="desc">{{ product.description }}</p>
+        <div class="meta">
+          <strong class="price">{{ product.price | currency: 'PEN ' }}</strong>
+          <small class="stock">Stock: {{ product.stock }}</small>
+        </div>
+        <button class="btn" (click)="addToCart(product)" [disabled]="product.stock === 0">
+          {{ product.stock === 0 ? 'Sin stock' : 'Agregar al carrito' }}
+        </button>
+      </div>
+    </article>
+  }
+</div>

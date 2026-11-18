@@ -1,0 +1,54 @@
+<h1>Tu carrito</h1>
+
+@if (cart.items().length === 0) {
+  <div class="empty">
+    <p>Tu carrito está vacío.</p>
+    <a class="btn-primary" routerLink="/">Ver productos</a>
+  </div>
+} @else {
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Producto</th>
+          <th>Precio</th>
+          <th>Cantidad</th>
+          <th>Subtotal</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of cart.items(); track item.product.id) {
+          <tr>
+            <td>{{ item.product.name }}</td>
+            <td>{{ item.product.price | currency: 'PEN ' }}</td>
+            <td>
+              <div class="qty">
+                <button (click)="cart.setQuantity(item.product.id, item.quantity - 1)">-</button>
+                <span>{{ item.quantity }}</span>
+                <button
+                  (click)="cart.setQuantity(item.product.id, item.quantity + 1)"
+                  [disabled]="item.quantity >= item.product.stock"
+                >
+                  +
+                </button>
+              </div>
+            </td>
+            <td>{{ item.product.price * item.quantity | currency: 'PEN ' }}</td>
+            <td>
+              <button class="btn-remove" (click)="cart.remove(item.product.id)">Quitar</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <div class="summary">
+    <h2>Total: {{ cart.total() | currency: 'PEN ' }}</h2>
+    <div class="actions">
+      <a class="btn-secondary" routerLink="/">Seguir comprando</a>
+      <a class="btn-primary" routerLink="/checkout">Ir a pagar</a>
+    </div>
+  </div>
+}

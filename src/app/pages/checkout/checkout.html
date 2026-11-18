@@ -1,0 +1,67 @@
+<h1>Checkout</h1>
+
+@if (cart.items().length === 0) {
+  <div class="box">
+    <p>No hay productos en tu carrito.</p>
+    <a routerLink="/">Volver al catálogo</a>
+  </div>
+} @else {
+  <div class="checkout-layout">
+    <form class="box form" [formGroup]="form" (ngSubmit)="submit()">
+      <h2>Datos de envío</h2>
+
+      <label>
+        Nombre completo
+        <input formControlName="name" placeholder="Ana Pérez" />
+        @if (form.controls.name.touched && form.controls.name.invalid) {
+          <small class="err">El nombre es obligatorio</small>
+        }
+      </label>
+
+      <label>
+        Correo electrónico
+        <input formControlName="email" type="email" placeholder="ana@mail.com" />
+        @if (form.controls.email.touched && form.controls.email.invalid) {
+          <small class="err">Ingresa un email válido</small>
+        }
+      </label>
+
+      <label>
+        Teléfono (opcional)
+        <input formControlName="phone" placeholder="999888777" />
+      </label>
+
+      <label>
+        Dirección
+        <input formControlName="address" placeholder="Av. Lima 123" />
+        @if (form.controls.address.touched && form.controls.address.invalid) {
+          <small class="err">La dirección es obligatoria</small>
+        }
+      </label>
+
+      @if (error()) {
+        <p class="err-box">{{ error() }}</p>
+      }
+
+      <button class="btn-submit" type="submit" [disabled]="form.invalid || sending()">
+        {{ sending() ? 'Procesando...' : 'Confirmar pedido' }}
+      </button>
+    </form>
+
+    <aside class="box summary">
+      <h2>Resumen</h2>
+      <ul>
+        @for (item of cart.items(); track item.product.id) {
+          <li>
+            <span>{{ item.quantity }} x {{ item.product.name }}</span>
+            <strong>{{ item.product.price * item.quantity | currency: 'PEN ' }}</strong>
+          </li>
+        }
+      </ul>
+      <div class="total">
+        <span>Total</span>
+        <strong>{{ cart.total() | currency: 'PEN ' }}</strong>
+      </div>
+    </aside>
+  </div>
+}

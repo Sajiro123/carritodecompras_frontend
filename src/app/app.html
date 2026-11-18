@@ -1,0 +1,15 @@
+<header class="navbar">
+  <div class="navbar__inner">
+    <a class="brand" routerLink="/">Mi Tienda</a>
+    <nav class="nav-links">
+      <a routerLink="/">Productos</a>
+      <a class="cart-pill" routerLink="/cart">
+        Carrito <span class="badge">{{ cart.count() }}</span>
+      </a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+  <router-outlet />
+</main>
