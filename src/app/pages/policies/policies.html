@@ -1,0 +1,50 @@
+<div class="policies-container">
+  <div class="policies-layout">
+    <!-- Menú lateral de políticas -->
+    <aside class="policies-sidebar">
+      <h3>Documentos Legales</h3>
+      <nav class="sidebar-nav">
+        @for (item of policyLinks; track item.slug) {
+          <a
+            [routerLink]="['/policies', item.slug]"
+            class="sidebar-link"
+            [class.active]="currentSlug() === item.slug"
+          >
+            {{ item.label }}
+          </a>
+        }
+      </nav>
+
+      <div class="sidebar-help">
+        <h4>¿Dudas sobre tus derechos?</h4>
+        <p>Escríbenos directamente a <strong>atencion&#64;mitienda.pe</strong> o llámanos al <strong>+51 987 654 321</strong>.</p>
+      </div>
+    </aside>
+
+    <!-- Contenido principal de la política -->
+    <main class="policy-content-card">
+      @if (loading()) {
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Cargando documento...</p>
+        </div>
+      } @else if (error()) {
+        <div class="error-state">
+          <h3>Documento no disponible</h3>
+          <p>{{ error() }}</p>
+          <a routerLink="/" class="btn-primary">Volver al inicio</a>
+        </div>
+      } @else if (politica(); as p) {
+        <div class="policy-article">
+          <div class="policy-header">
+            <span class="category-badge">Mi Tienda Online S.A.C.</span>
+            <h1>{{ p.titulo }}</h1>
+            <span class="updated-date">Última actualización: {{ p.actualizadoEl | date: 'dd/MM/yyyy' }}</span>
+          </div>
+
+          <div class="policy-body" [innerHTML]="p.contenido"></div>
+        </div>
+      }
+    </main>
+  </div>
+</div>

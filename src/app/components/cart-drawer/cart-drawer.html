@@ -1,0 +1,134 @@
+@if (cart.isDrawerOpen()) {
+  <div class="drawer-backdrop" (click)="close()" aria-hidden="true"></div>
+
+  <aside class="drawer-panel" role="dialog" aria-modal="true" aria-label="Carrito de compras">
+    <!-- Header -->
+    <div class="drawer-header">
+      <div class="drawer-title">
+        <span class="icon">🛒</span>
+        <h3>Tu Carrito</h3>
+        <span class="badge">{{ cart.count() }}</span>
+      </div>
+      <button type="button" class="btn-close" (click)="close()" aria-label="Cerrar carrito">✕</button>
+    </div>
+
+    <!-- Barra de progreso envío gratis (S/ 300) -->
+    <div class="shipping-progress-box" [class.achieved]="cart.hasFreeShipping()">
+      <div class="shipping-message">
+        <span class="truck-icon">{{ cart.hasFreeShipping() ? '🎉' : '🚚' }}</span>
+        <span>{{ cart.freeShippingMessage() }}</span>
+      </div>
+      <div class="progress-bar-container">
+        <div
+          class="progress-bar-fill"
+          [style.width.%]="cart.freeShippingProgress()"
+          [class.full]="cart.hasFreeShipping()"
+        ></div>
+      </div>
+      <div class="progress-labels">
+        <span>S/ {{ cart.subtotal() | number: '1.2-2' }}</span>
+        <span>Meta: S/ 300.00</span>
+      </div>
+    </div>
+
+    <!-- Body / Items -->
+    <div class="drawer-body">
+      @if (cart.items().length === 0) {
+        <div class="empty-state">
+          <div class="empty-icon">🛍️</div>
+          <h4>Tu carrito está vacío</h4>
+          <p>Agrega productos de nuestro catálogo para comenzar tu compra.</p>
+          <button type="button" class="btn-browse" (click)="close()" routerLink="/">
+            Explorar Productos
+          </button>
+        </div>
+      } @else {
+        <div class="cart-items-list">
+          @for (item of cart.items(); track item.product.id) {
+            <div class="drawer-item">
+              <div class="item-img-wrapper">
+                <img
+                  [src]="item.product.imageUrl || 'https://picsum.photos/seed/default/100/100'"
+                  [alt]="item.product.name"
+                  class="item-img"
+                />
+              </div>
+
+              <div class="item-details">
+                <div class="item-head">
+                  <h4 class="item-name">{{ item.product.name }}</h4>
+                  <button
+                    type="button"
+                    class="btn-delete"
+                    (click)="cart.remove(item.product.id)"
+                    title="Eliminar producto"
+                    aria-label="Eliminar"
+                  >
+                    🗑️
+                  </button>
+                </div>
+
+                <div class="item-price">
+                  S/ {{ item.product.price | number: '1.2-2' }}
+                </div>
+
+                <div class="item-controls">
+                  <div class="stepper">
+                    <button
+                      type="button"
+                      class="step-btn"
+                      (click)="cart.decrement(item.product.id)"
+                      aria-label="Disminuir cantidad"
+                    >
+                      −
+                    </button>
+                    <span class="step-value">{{ item.quantity }}</span>
+                    <button
+                      type="button"
+                      class="step-btn"
+                      [disabled]="item.quantity >= item.product.stock"
+                      (click)="cart.increment(item.product.id)"
+                      aria-label="Aumentar cantidad"
+                    >
+                      +
+                    </button>
+                  </div>
+
+                  <div class="item-subtotal">
+                    S/ {{ (item.product.price * item.quantity) | number: '1.2-2' }}
+                  </div>
+                </div>
+
+                @if (item.quantity >= item.product.stock) {
+                  <span class="stock-warning">Máx. disponible ({{ item.product.stock }})</span>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Footer -->
+    @if (cart.items().length > 0) {
+      <div class="drawer-footer">
+        <div class="subtotal-row">
+          <span>Subtotal estimado</span>
+          <span class="subtotal-val">S/ {{ cart.subtotal() | number: '1.2-2' }}</span>
+        </div>
+        <p class="shipping-hint">
+          * Costo de envío final calculado en el checkout según tu ubicación.
+        </p>
+
+        <div class="drawer-actions">
+          <button type="button" class="btn-secondary" (click)="goToCart()">
+            Ver Carrito
+          </button>
+          <button type="button" class="btn-checkout" (click)="goToCheckout()">
+            Continuar al Checkout →
+          </button>
+        </div>
+      </div>
+    }
+  </aside>
+}
