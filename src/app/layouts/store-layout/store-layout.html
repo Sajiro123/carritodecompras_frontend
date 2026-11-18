@@ -1,0 +1,29 @@
+<header class="navbar">
+  <div class="navbar__inner">
+    <a class="brand" routerLink="/">
+      <img [src]="brand.logoUrl" [alt]="brand.name" />
+      <span>
+        <strong>{{ brand.name }}</strong>
+        <small>{{ brand.tagline }}</small>
+      </span>
+    </a>
+
+    <nav class="nav-links">
+      <a routerLink="/">Catálogo</a>
+      <a class="cart-pill" routerLink="/cart">
+        Carrito <span class="badge">{{ cart.count() }}</span>
+      </a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+  <router-outlet />
+</main>
+
+<footer class="store-footer">
+  <div class="footer-inner">
+    <span>© 2026 {{ brand.name }} · {{ brand.tagline }}</span>
+    <a routerLink="/admin">Acceso administrativo</a>
+  </div>
+</footer>
