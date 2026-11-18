@@ -1,20 +1,69 @@
 <!-- Encabezado de la Colección -->
 <div class="collection-header">
-  <div>
-    <h1 class="collection-title">Todos los productos</h1>
-    <p class="collection-count">{{ totalElements }} productos en total</p>
+  <div class="collection-title-box">
+    <h1 class="collection-title">Catálogo Exclusivo</h1>
+    <div class="collection-meta">
+      <span class="collection-count">{{ totalElements }} productos disponibles</span>
+      @if (getActiveFiltersCount() > 0) {
+        <span class="active-badge">{{ getActiveFiltersCount() }} filtros activos</span>
+      }
+    </div>
   </div>
 
-  <div class="collection-sort">
-    <label for="sortSelect">Ordenar por:</label>
-    <select id="sortSelect" class="sort-dropdown" [(ngModel)]="sort" (change)="applyFilters(0)">
-      <option value="">Destacados</option>
-      <option value="newest">Novedades / Más recientes</option>
-      <option value="price,asc">Precio: menor a mayor</option>
-      <option value="price,desc">Precio: mayor a menor</option>
-      <option value="name,asc">Nombre: A – Z</option>
-      <option value="name,desc">Nombre: Z – A</option>
-    </select>
+  <div class="collection-controls">
+    <!-- Botón para abrir filtros en móviles -->
+    <button type="button" class="btn-mobile-filters" (click)="toggleMobileDrawer()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="4" y1="21" x2="4" y2="14"/>
+        <line x1="4" y1="10" x2="4" y2="3"/>
+        <line x1="12" y1="21" x2="12" y2="12"/>
+        <line x1="12" y1="8" x2="12" y2="3"/>
+        <line x1="20" y1="21" x2="20" y2="16"/>
+        <line x1="20" y1="12" x2="20" y2="3"/>
+        <line x1="1" y1="14" x2="7" y2="14"/>
+        <line x1="9" y1="8" x2="15" y2="8"/>
+        <line x1="17" y1="16" x2="23" y2="16"/>
+      </svg>
+      <span>Filtros</span>
+      @if (getActiveFiltersCount() > 0) {
+        <span class="mobile-filter-count">{{ getActiveFiltersCount() }}</span>
+      }
+    </button>
+
+    <!-- Selector de Densidad de Cuadrícula (Escritorio) -->
+    <div class="density-toggle">
+      <button
+        type="button"
+        class="density-btn"
+        [class.density-btn--active]="gridDensity === 'normal'"
+        (click)="gridDensity = 'normal'"
+        title="Vista estándar (3 columnas)"
+      >
+        <span class="grid-icon">▦</span>
+      </button>
+      <button
+        type="button"
+        class="density-btn"
+        [class.density-btn--active]="gridDensity === 'compact'"
+        (click)="gridDensity = 'compact'"
+        title="Vista compacta (4 columnas)"
+      >
+        <span class="grid-icon">▤</span>
+      </button>
+    </div>
+
+    <!-- Selector de Ordenamiento -->
+    <div class="collection-sort">
+      <label for="sortSelect">Ordenar:</label>
+      <select id="sortSelect" class="sort-dropdown" [(ngModel)]="sort" (change)="applyFilters(0)">
+        <option value="">Destacados</option>
+        <option value="newest">Novedades / Recientes</option>
+        <option value="price,asc">Precio: menor a mayor</option>
+        <option value="price,desc">Precio: mayor a menor</option>
+        <option value="name,asc">Nombre: A – Z</option>
+        <option value="name,desc">Nombre: Z – A</option>
+      </select>
+    </div>
   </div>
 </div>
 
@@ -28,16 +77,30 @@
 
 <!-- Layout Principal: Sidebar Izquierdo + Grid de Productos -->
 <div class="shop-layout">
-  <!-- Sidebar de Filtros (Estilo Nietux) -->
-  <aside class="filters-sidebar" aria-label="Filtros">
+  <!-- Backdrop para Drawer Móvil -->
+  @if (isMobileFilterOpen) {
+    <div class="drawer-backdrop" (click)="toggleMobileDrawer()"></div>
+  }
+
+  <!-- Sidebar de Filtros (Estilo Nietux / Shopify Ultra Moderno) -->
+  <aside class="filters-sidebar" [class.filters-sidebar--open]="isMobileFilterOpen" aria-label="Filtros">
     <div class="filters-header">
-      <h3>Filtros</h3>
-      @if (categoria || talla || color || disponible !== null || minPrecio || maxPrecio || q) {
-        <button class="btn-clear-text" (click)="resetFilters()">Limpiar todo</button>
-      }
+      <div class="filters-title-wrap">
+        <h3>Filtros</h3>
+        @if (getActiveFiltersCount() > 0) {
+          <span class="pill-count">{{ getActiveFiltersCount() }}</span>
+        }
+      </div>
+
+      <div class="filters-header-actions">
+        @if (getActiveFiltersCount() > 0) {
+          <button class="btn-clear-text" (click)="resetFilters()">Limpiar todo</button>
+        }
+        <button class="btn-close-drawer" (click)="toggleMobileDrawer()" aria-label="Cerrar filtros">×</button>
+      </div>
     </div>
 
-    <!-- Buscador -->
+    <!-- 1. Buscador con Búsqueda Reactiva Instantánea (Debounced) -->
     <div class="filter-section search-section">
       <div class="search-input-wrapper">
         <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -47,136 +110,285 @@
         <input
           type="text"
           [(ngModel)]="q"
-          (keyup.enter)="applyFilters(0)"
-          placeholder="Buscar producto..."
+          (ngModelChange)="onSearchChange()"
+          placeholder="Buscar polo, casaca, reloj..."
         />
-      </div>
-    </div>
-
-    <!-- Acordeón 1: Disponibilidad -->
-    <div class="filter-section">
-      <h4 class="filter-title">Disponibilidad</h4>
-      <div class="filter-options">
-        <label class="checkbox-label" (click)="toggleDisponible(true)">
-          <input type="checkbox" [checked]="disponible === true" readonly />
-          <span class="custom-checkbox"></span>
-          <span>En existencia</span>
-        </label>
-        <label class="checkbox-label" (click)="toggleDisponible(false)">
-          <input type="checkbox" [checked]="disponible === false" readonly />
-          <span class="custom-checkbox"></span>
-          <span>Agotado</span>
-        </label>
-      </div>
-    </div>
-
-    <!-- Acordeón 2: Categorías -->
-    <div class="filter-section">
-      <h4 class="filter-title">Categorías</h4>
-      <div class="filter-options">
-        @for (c of categories(); track c.id) {
-          <label class="checkbox-label" (click)="selectCategory(c.slug)">
-            <input type="checkbox" [checked]="categoria === c.slug" readonly />
-            <span class="custom-checkbox"></span>
-            <span class="option-text">{{ c.name }}</span>
-            <span class="option-count">({{ c.activeProductsCount }})</span>
-          </label>
+        @if (q) {
+          <button class="search-clear-btn" (click)="q = ''; applyFilters(0)">×</button>
         }
       </div>
     </div>
 
-    <!-- Acordeón 3: Tallas (Dinámicas de la Base de Datos) -->
-    <div class="filter-section">
-      <h4 class="filter-title">Talla</h4>
-      <div class="tag-grid">
-        @for (size of availableTallas(); track size) {
-          <button
-            type="button"
-            class="size-pill"
-            [class.size-pill--active]="talla === size"
-            (click)="selectTalla(size)"
-          >
-            {{ size }}
-          </button>
-        }
-      </div>
-    </div>
+    <!-- 2. Acordeón: Categorías (Multi-selección) -->
+    <div class="filter-accordion">
+      <button class="accordion-header" (click)="toggleSection('categorias')">
+        <span class="accordion-title">
+          Categorías
+          @if (selectedCategories.length > 0) {
+            <span class="badge-mini">{{ selectedCategories.length }}</span>
+          }
+        </span>
+        <span class="chevron" [class.chevron--open]="sectionsOpen['categorias']">▾</span>
+      </button>
 
-    <!-- Acordeón 4: Colores (Dinámicos de la Base de Datos) -->
-    <div class="filter-section">
-      <h4 class="filter-title">Color</h4>
-      <div class="filter-options">
-        @for (c of availableColores(); track c) {
-          <label class="checkbox-label" (click)="selectColor(c)">
-            <input type="checkbox" [checked]="color === c" readonly />
-            <span class="custom-checkbox"></span>
-            <span class="option-text">{{ c }}</span>
-          </label>
-        }
-      </div>
-    </div>
-
-    <!-- Acordeón 5: Precio -->
-    <div class="filter-section">
-      <h4 class="filter-title">Precio</h4>
-      <div class="price-inputs">
-        <div class="price-field">
-          <span class="price-currency">S/</span>
-          <input
-            type="number"
-            [(ngModel)]="minPrecio"
-            (keyup.enter)="applyFilters(0)"
-            placeholder="Mín"
-            min="0"
-          />
+      @if (sectionsOpen['categorias']) {
+        <div class="accordion-body">
+          @for (c of categories(); track c.id) {
+            <label class="checkbox-label" (click)="toggleCategory(c.slug)">
+              <input type="checkbox" [checked]="isCategorySelected(c.slug)" readonly />
+              <span class="custom-checkbox"></span>
+              <span class="option-text">{{ c.name }}</span>
+              <span class="option-count">({{ c.activeProductsCount }})</span>
+            </label>
+          }
         </div>
-        <span class="price-sep">–</span>
-        <div class="price-field">
-          <span class="price-currency">S/</span>
-          <input
-            type="number"
-            [(ngModel)]="maxPrecio"
-            (keyup.enter)="applyFilters(0)"
-            placeholder="Máx"
-            min="0"
-          />
+      }
+    </div>
+
+    <!-- 3. Acordeón: Tallas (Píldoras Multi-selección) -->
+    <div class="filter-accordion">
+      <button class="accordion-header" (click)="toggleSection('tallas')">
+        <span class="accordion-title">
+          Talla
+          @if (selectedTallas.length > 0) {
+            <span class="badge-mini">{{ selectedTallas.length }}</span>
+          }
+        </span>
+        <span class="chevron" [class.chevron--open]="sectionsOpen['tallas']">▾</span>
+      </button>
+
+      @if (sectionsOpen['tallas']) {
+        <div class="accordion-body">
+          <div class="tag-grid">
+            @for (size of availableTallas(); track size) {
+              <button
+                type="button"
+                class="size-pill"
+                [class.size-pill--active]="isTallaSelected(size)"
+                (click)="toggleTalla(size)"
+              >
+                {{ size }}
+              </button>
+            }
+          </div>
         </div>
-      </div>
-      <button class="btn-apply-price" (click)="applyFilters(0)">Aplicar precio</button>
+      }
+    </div>
+
+    <!-- 4. Acordeón: Colores (Swatches Visuales con Círculos de Color) -->
+    <div class="filter-accordion">
+      <button class="accordion-header" (click)="toggleSection('colores')">
+        <span class="accordion-title">
+          Color
+          @if (selectedColors.length > 0) {
+            <span class="badge-mini">{{ selectedColors.length }}</span>
+          }
+        </span>
+        <span class="chevron" [class.chevron--open]="sectionsOpen['colores']">▾</span>
+      </button>
+
+      @if (sectionsOpen['colores']) {
+        <div class="accordion-body">
+          <div class="swatches-grid">
+            @for (c of availableColores(); track c) {
+              <button
+                type="button"
+                class="swatch-btn"
+                [class.swatch-btn--active]="isColorSelected(c)"
+                (click)="toggleColor(c)"
+                [title]="c"
+              >
+                <span
+                  class="swatch-dot"
+                  [style.background-color]="getColorHex(c)"
+                  [class.swatch-dot--white]="c.toLowerCase() === 'blanco'"
+                >
+                  @if (isColorSelected(c)) {
+                    <span class="swatch-check" [style.color]="c.toLowerCase() === 'blanco' ? '#18181b' : '#ffffff'">✓</span>
+                  }
+                </span>
+                <span class="swatch-label">{{ c }}</span>
+              </button>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- 5. Acordeón: Precio (Campos Numéricos + Presets Rápidos) -->
+    <div class="filter-accordion">
+      <button class="accordion-header" (click)="toggleSection('precio')">
+        <span class="accordion-title">
+          Precio
+          @if (minPrecio != null || maxPrecio != null) {
+            <span class="badge-mini">Activo</span>
+          }
+        </span>
+        <span class="chevron" [class.chevron--open]="sectionsOpen['precio']">▾</span>
+      </button>
+
+      @if (sectionsOpen['precio']) {
+        <div class="accordion-body">
+          <!-- Presets rápidos -->
+          <div class="price-presets">
+            <button
+              type="button"
+              class="preset-chip"
+              [class.preset-chip--active]="isPricePresetActive(null, 50)"
+              (click)="setPricePreset(null, 50)"
+            >
+              Hasta S/ 50
+            </button>
+            <button
+              type="button"
+              class="preset-chip"
+              [class.preset-chip--active]="isPricePresetActive(50, 100)"
+              (click)="setPricePreset(50, 100)"
+            >
+              S/ 50 - 100
+            </button>
+            <button
+              type="button"
+              class="preset-chip"
+              [class.preset-chip--active]="isPricePresetActive(100, 200)"
+              (click)="setPricePreset(100, 200)"
+            >
+              S/ 100 - 200
+            </button>
+            <button
+              type="button"
+              class="preset-chip"
+              [class.preset-chip--active]="isPricePresetActive(200, null)"
+              (click)="setPricePreset(200, null)"
+            >
+              Más de S/ 200
+            </button>
+          </div>
+
+          <div class="price-inputs">
+            <div class="price-field">
+              <span class="price-currency">S/</span>
+              <input
+                type="number"
+                [(ngModel)]="minPrecio"
+                (keyup.enter)="applyFilters(0)"
+                placeholder="Mín"
+                min="0"
+              />
+            </div>
+            <span class="price-sep">–</span>
+            <div class="price-field">
+              <span class="price-currency">S/</span>
+              <input
+                type="number"
+                [(ngModel)]="maxPrecio"
+                (keyup.enter)="applyFilters(0)"
+                placeholder="Máx"
+                min="0"
+              />
+            </div>
+          </div>
+          <button class="btn-apply-price" (click)="applyFilters(0)">Aplicar rango</button>
+        </div>
+      }
+    </div>
+
+    <!-- 6. Acordeón: Disponibilidad -->
+    <div class="filter-accordion">
+      <button class="accordion-header" (click)="toggleSection('disponibilidad')">
+        <span class="accordion-title">
+          Disponibilidad
+          @if (disponible !== null) {
+            <span class="badge-mini">1</span>
+          }
+        </span>
+        <span class="chevron" [class.chevron--open]="sectionsOpen['disponibilidad']">▾</span>
+      </button>
+
+      @if (sectionsOpen['disponibilidad']) {
+        <div class="accordion-body">
+          <label class="checkbox-label" (click)="toggleDisponible(true)">
+            <input type="checkbox" [checked]="disponible === true" readonly />
+            <span class="custom-checkbox"></span>
+            <span>En existencia</span>
+          </label>
+          <label class="checkbox-label" (click)="toggleDisponible(false)">
+            <input type="checkbox" [checked]="disponible === false" readonly />
+            <span class="custom-checkbox"></span>
+            <span>Agotado</span>
+          </label>
+        </div>
+      }
+    </div>
+
+    <!-- Botón de aplicar en móvil -->
+    <div class="mobile-drawer-footer">
+      <button class="btn-apply-mobile" (click)="toggleMobileDrawer()">
+        Ver {{ totalElements }} productos
+      </button>
     </div>
   </aside>
 
   <!-- Contenido de Productos -->
   <section class="products-section">
-    <!-- Chips de filtros activos -->
-    @if (categoria || talla || color || disponible !== null || minPrecio || maxPrecio || q) {
-      <div class="active-chips">
+    <!-- Barra dinámica de Chips de filtros activos -->
+    @if (getActiveFiltersCount() > 0) {
+      <div class="active-chips-bar">
+        <span class="chips-label">Filtros aplicados:</span>
+
         @if (q) {
-          <span class="chip">Búsqueda: "{{ q }}" <button (click)="q = ''; applyFilters(0)">×</button></span>
+          <span class="chip">
+            "{{ q }}"
+            <button (click)="q = ''; applyFilters(0)" aria-label="Quitar búsqueda">×</button>
+          </span>
         }
-        @if (categoria) {
-          <span class="chip">Categoría: {{ categoria }} <button (click)="categoria = ''; applyFilters(0)">×</button></span>
+        @for (cat of selectedCategories; track cat) {
+          <span class="chip chip--cat">
+            {{ cat }}
+            <button (click)="toggleCategory(cat)" aria-label="Quitar categoría">×</button>
+          </span>
         }
-        @if (talla) {
-          <span class="chip">Talla: {{ talla }} <button (click)="talla = ''; applyFilters(0)">×</button></span>
+        @for (s of selectedTallas; track s) {
+          <span class="chip chip--size">
+            Talla: {{ s }}
+            <button (click)="toggleTalla(s)" aria-label="Quitar talla">×</button>
+          </span>
         }
-        @if (color) {
-          <span class="chip">Color: {{ color }} <button (click)="color = ''; applyFilters(0)">×</button></span>
+        @for (col of selectedColors; track col) {
+          <span class="chip chip--color">
+            <span class="chip-dot" [style.background-color]="getColorHex(col)"></span>
+            {{ col }}
+            <button (click)="toggleColor(col)" aria-label="Quitar color">×</button>
+          </span>
         }
         @if (disponible !== null) {
-          <span class="chip">{{ disponible ? 'En existencia' : 'Agotado' }} <button (click)="disponible = null; applyFilters(0)">×</button></span>
+          <span class="chip">
+            {{ disponible ? 'En existencia' : 'Agotado' }}
+            <button (click)="disponible = null; applyFilters(0)">×</button>
+          </span>
         }
-        @if (minPrecio || maxPrecio) {
-          <span class="chip">Precio: S/ {{ minPrecio || 0 }} - S/ {{ maxPrecio || '...' }} <button (click)="minPrecio = null; maxPrecio = null; applyFilters(0)">×</button></span>
+        @if (minPrecio != null || maxPrecio != null) {
+          <span class="chip">
+            S/ {{ minPrecio || 0 }} - S/ {{ maxPrecio || '...' }}
+            <button (click)="minPrecio = null; maxPrecio = null; applyFilters(0)">×</button>
+          </span>
         }
+
+        <button class="btn-clear-all" (click)="resetFilters()">Limpiar todo</button>
       </div>
     }
 
-    <!-- Estado de Carga -->
+    <!-- Skeletons durante carga (Zero Layout Shift) -->
     @if (loading()) {
-      <div class="loading-state">
-        <div class="spinner"></div>
-        <p>Cargando productos...</p>
+      <div class="product-grid" [class.product-grid--compact]="gridDensity === 'compact'">
+        @for (item of [1,2,3,4,5,6]; track item) {
+          <div class="product-card skeleton-card">
+            <div class="skeleton skeleton-media"></div>
+            <div class="skeleton skeleton-tag"></div>
+            <div class="skeleton skeleton-title"></div>
+            <div class="skeleton skeleton-price"></div>
+          </div>
+        }
       </div>
     }
 
@@ -192,15 +404,15 @@
           <circle cx="11" cy="11" r="8"/>
           <line x1="21" y1="21" x2="16.65" y2="16.65"/>
         </svg>
-        <h3>No se encontraron productos</h3>
-        <p>Intenta ajustar o borrar los filtros aplicados para ver más resultados.</p>
+        <h3>No se encontraron coincidencias</h3>
+        <p>Prueba ajustando o quitando algunos de los filtros seleccionados.</p>
         <button class="btn-pill-orange" (click)="resetFilters()">Restablecer filtros</button>
       </div>
     }
 
     <!-- Grid de Productos (Estilo Nietux: 3:4 portrait, esquinas redondeadas) -->
     @if (!loading() && products().length > 0) {
-      <div class="product-grid">
+      <div class="product-grid" [class.product-grid--compact]="gridDensity === 'compact'">
         @for (product of products(); track product.id) {
           <article class="product-card" (click)="openDetail(product)">
             <div class="product-media">

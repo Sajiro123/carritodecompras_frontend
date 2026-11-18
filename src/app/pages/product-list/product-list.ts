@@ -23,11 +23,11 @@ export class ProductList implements OnInit {
   readonly error = signal('');
   readonly addedMessage = signal('');
 
-  // Filtros estilo Nietux
+  // Filtros dinámicos con soporte de multi-selección
   q = '';
-  categoria = '';
-  talla = '';
-  color = '';
+  selectedCategories: string[] = [];
+  selectedTallas: string[] = [];
+  selectedColors: string[] = [];
   disponible: boolean | null = null;
   minPrecio: number | null = null;
   maxPrecio: number | null = null;
@@ -36,7 +36,26 @@ export class ProductList implements OnInit {
   totalPages = 1;
   totalElements = 0;
 
-  // Estado reactivo del Modal con Signals
+  // Rango de precios de la BD
+  dbMinPrice = 0;
+  dbMaxPrice = 500;
+
+  // Estado de vista y UI
+  gridDensity: 'normal' | 'compact' = 'normal';
+  isMobileFilterOpen = false;
+
+  // Secciones colapsables de filtros
+  sectionsOpen: Record<string, boolean> = {
+    disponibilidad: true,
+    categorias: true,
+    tallas: true,
+    colores: true,
+    precio: true,
+  };
+
+  private searchDebounceTimer: any = null;
+
+  // Estado del Modal de Detalle con Signals
   readonly isDetailOpen = signal(false);
   readonly detailLoading = signal(false);
   readonly selectedProduct = signal<any>(null);
@@ -64,14 +83,24 @@ export class ProductList implements OnInit {
         if (opts.categories) this.categories.set(opts.categories);
         if (opts.tallas) this.availableTallas.set(opts.tallas);
         if (opts.colores) this.availableColores.set(opts.colores);
+        if (opts.minPrice != null) this.dbMinPrice = opts.minPrice;
+        if (opts.maxPrice != null) this.dbMaxPrice = opts.maxPrice;
       },
       error: () => {
-        // Fallback a categories si filterOptions falla
         this.productService.getCategories().subscribe({
           next: (cats) => this.categories.set(cats),
         });
       },
     });
+  }
+
+  onSearchChange(): void {
+    if (this.searchDebounceTimer) {
+      clearTimeout(this.searchDebounceTimer);
+    }
+    this.searchDebounceTimer = setTimeout(() => {
+      this.applyFilters(0);
+    }, 300);
   }
 
   applyFilters(page = 0): void {
@@ -83,10 +112,17 @@ export class ProductList implements OnInit {
       page: this.page,
       size: 12,
     };
+
     if (this.q.trim()) params['q'] = this.q.trim();
-    if (this.categoria) params['categoria'] = this.categoria;
-    if (this.talla) params['talla'] = this.talla;
-    if (this.color) params['color'] = this.color;
+    if (this.selectedCategories.length > 0) {
+      params['categoria'] = this.selectedCategories.join(',');
+    }
+    if (this.selectedTallas.length > 0) {
+      params['talla'] = this.selectedTallas.join(',');
+    }
+    if (this.selectedColors.length > 0) {
+      params['color'] = this.selectedColors.join(',');
+    }
     if (this.disponible !== null) params['disponible'] = this.disponible;
     if (this.minPrecio != null && this.minPrecio !== ('' as any)) params['minPrecio'] = this.minPrecio;
     if (this.maxPrecio != null && this.maxPrecio !== ('' as any)) params['maxPrecio'] = this.maxPrecio;
@@ -106,19 +142,47 @@ export class ProductList implements OnInit {
     });
   }
 
-  selectCategory(slug: string): void {
-    this.categoria = this.categoria === slug ? '' : slug;
+  // --- Manejo de multi-selección interactiva ---
+  toggleCategory(slug: string): void {
+    const idx = this.selectedCategories.indexOf(slug);
+    if (idx >= 0) {
+      this.selectedCategories.splice(idx, 1);
+    } else {
+      this.selectedCategories.push(slug);
+    }
     this.applyFilters(0);
   }
 
-  selectTalla(size: string): void {
-    this.talla = this.talla === size ? '' : size;
+  isCategorySelected(slug: string): boolean {
+    return this.selectedCategories.includes(slug);
+  }
+
+  toggleTalla(size: string): void {
+    const idx = this.selectedTallas.indexOf(size);
+    if (idx >= 0) {
+      this.selectedTallas.splice(idx, 1);
+    } else {
+      this.selectedTallas.push(size);
+    }
     this.applyFilters(0);
   }
 
-  selectColor(c: string): void {
-    this.color = this.color === c ? '' : c;
+  isTallaSelected(size: string): boolean {
+    return this.selectedTallas.includes(size);
+  }
+
+  toggleColor(color: string): void {
+    const idx = this.selectedColors.indexOf(color);
+    if (idx >= 0) {
+      this.selectedColors.splice(idx, 1);
+    } else {
+      this.selectedColors.push(color);
+    }
     this.applyFilters(0);
+  }
+
+  isColorSelected(color: string): boolean {
+    return this.selectedColors.includes(color);
   }
 
   toggleDisponible(val: boolean): void {
@@ -126,16 +190,57 @@ export class ProductList implements OnInit {
     this.applyFilters(0);
   }
 
+  setPricePreset(min: number | null, max: number | null): void {
+    this.minPrecio = min;
+    this.maxPrecio = max;
+    this.applyFilters(0);
+  }
+
+  isPricePresetActive(min: number | null, max: number | null): boolean {
+    return this.minPrecio === min && this.maxPrecio === max;
+  }
+
   resetFilters(): void {
     this.q = '';
-    this.categoria = '';
-    this.talla = '';
-    this.color = '';
+    this.selectedCategories = [];
+    this.selectedTallas = [];
+    this.selectedColors = [];
     this.disponible = null;
     this.minPrecio = null;
     this.maxPrecio = null;
     this.sort = '';
     this.applyFilters(0);
+  }
+
+  getActiveFiltersCount(): number {
+    let count = 0;
+    count += this.selectedCategories.length;
+    count += this.selectedTallas.length;
+    count += this.selectedColors.length;
+    if (this.disponible !== null) count++;
+    if (this.minPrecio != null || this.maxPrecio != null) count++;
+    if (this.q.trim()) count++;
+    return count;
+  }
+
+  toggleSection(section: string): void {
+    this.sectionsOpen[section] = !this.sectionsOpen[section];
+  }
+
+  toggleMobileDrawer(): void {
+    this.isMobileFilterOpen = !this.isMobileFilterOpen;
+  }
+
+  getColorHex(name: string): string {
+    const map: Record<string, string> = {
+      negro: '#18181b',
+      blanco: '#ffffff',
+      azul: '#2563eb',
+      rojo: '#ef4444',
+      gris: '#94a3b8',
+      verde: '#16a34a',
+    };
+    return map[name.toLowerCase().trim()] || '#cbd5e1';
   }
 
   addToCart(product: Product, event?: Event): void {
