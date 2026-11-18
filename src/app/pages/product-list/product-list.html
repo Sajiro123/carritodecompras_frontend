@@ -1,35 +1,425 @@
-<div class="header-row">
-  <h1>Productos</h1>
-  @if (addedMessage()) {
-    <span class="toast">{{ addedMessage() }}</span>
-  }
+<!-- Encabezado de la Colección -->
+<div class="collection-header">
+  <div>
+    <h1 class="collection-title">Todos los productos</h1>
+    <p class="collection-count">{{ totalElements }} productos en total</p>
+  </div>
+
+  <div class="collection-sort">
+    <label for="sortSelect">Ordenar por:</label>
+    <select id="sortSelect" class="sort-dropdown" [(ngModel)]="sort" (change)="applyFilters(0)">
+      <option value="">Destacados</option>
+      <option value="newest">Novedades / Más recientes</option>
+      <option value="price,asc">Precio: menor a mayor</option>
+      <option value="price,desc">Precio: mayor a menor</option>
+      <option value="name,asc">Nombre: A – Z</option>
+      <option value="name,desc">Nombre: Z – A</option>
+    </select>
+  </div>
 </div>
 
-@if (loading()) {
-  <p class="muted">Cargando productos...</p>
+<!-- Toast flotante cuando se agrega al carrito -->
+@if (addedMessage()) {
+  <div class="toast-floating">
+    <span class="toast-check">✓</span>
+    <span>{{ addedMessage() }}</span>
+  </div>
 }
 
-@if (error()) {
-  <p class="error-box">{{ error() }}</p>
-}
-
-<div class="grid">
-  @for (product of products(); track product.id) {
-    <article class="card">
-      @if (product.imageUrl) {
-        <img [src]="product.imageUrl" [alt]="product.name" />
+<!-- Layout Principal: Sidebar Izquierdo + Grid de Productos -->
+<div class="shop-layout">
+  <!-- Sidebar de Filtros (Estilo Nietux) -->
+  <aside class="filters-sidebar" aria-label="Filtros">
+    <div class="filters-header">
+      <h3>Filtros</h3>
+      @if (categoria || talla || color || disponible !== null || minPrecio || maxPrecio || q) {
+        <button class="btn-clear-text" (click)="resetFilters()">Limpiar todo</button>
       }
-      <div class="card-body">
-        <h3>{{ product.name }}</h3>
-        <p class="desc">{{ product.description }}</p>
-        <div class="meta">
-          <strong class="price">{{ product.price | currency: 'PEN ' }}</strong>
-          <small class="stock">Stock: {{ product.stock }}</small>
-        </div>
-        <button class="btn" (click)="addToCart(product)" [disabled]="product.stock === 0">
-          {{ product.stock === 0 ? 'Sin stock' : 'Agregar al carrito' }}
-        </button>
+    </div>
+
+    <!-- Buscador -->
+    <div class="filter-section search-section">
+      <div class="search-input-wrapper">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input
+          type="text"
+          [(ngModel)]="q"
+          (keyup.enter)="applyFilters(0)"
+          placeholder="Buscar producto..."
+        />
       </div>
-    </article>
-  }
+    </div>
+
+    <!-- Acordeón 1: Disponibilidad -->
+    <div class="filter-section">
+      <h4 class="filter-title">Disponibilidad</h4>
+      <div class="filter-options">
+        <label class="checkbox-label" (click)="toggleDisponible(true)">
+          <input type="checkbox" [checked]="disponible === true" readonly />
+          <span class="custom-checkbox"></span>
+          <span>En existencia</span>
+        </label>
+        <label class="checkbox-label" (click)="toggleDisponible(false)">
+          <input type="checkbox" [checked]="disponible === false" readonly />
+          <span class="custom-checkbox"></span>
+          <span>Agotado</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Acordeón 2: Categorías -->
+    <div class="filter-section">
+      <h4 class="filter-title">Categorías</h4>
+      <div class="filter-options">
+        @for (c of categories(); track c.id) {
+          <label class="checkbox-label" (click)="selectCategory(c.slug)">
+            <input type="checkbox" [checked]="categoria === c.slug" readonly />
+            <span class="custom-checkbox"></span>
+            <span class="option-text">{{ c.name }}</span>
+            <span class="option-count">({{ c.activeProductsCount }})</span>
+          </label>
+        }
+      </div>
+    </div>
+
+    <!-- Acordeón 3: Tallas (Dinámicas de la Base de Datos) -->
+    <div class="filter-section">
+      <h4 class="filter-title">Talla</h4>
+      <div class="tag-grid">
+        @for (size of availableTallas(); track size) {
+          <button
+            type="button"
+            class="size-pill"
+            [class.size-pill--active]="talla === size"
+            (click)="selectTalla(size)"
+          >
+            {{ size }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Acordeón 4: Colores (Dinámicos de la Base de Datos) -->
+    <div class="filter-section">
+      <h4 class="filter-title">Color</h4>
+      <div class="filter-options">
+        @for (c of availableColores(); track c) {
+          <label class="checkbox-label" (click)="selectColor(c)">
+            <input type="checkbox" [checked]="color === c" readonly />
+            <span class="custom-checkbox"></span>
+            <span class="option-text">{{ c }}</span>
+          </label>
+        }
+      </div>
+    </div>
+
+    <!-- Acordeón 5: Precio -->
+    <div class="filter-section">
+      <h4 class="filter-title">Precio</h4>
+      <div class="price-inputs">
+        <div class="price-field">
+          <span class="price-currency">S/</span>
+          <input
+            type="number"
+            [(ngModel)]="minPrecio"
+            (keyup.enter)="applyFilters(0)"
+            placeholder="Mín"
+            min="0"
+          />
+        </div>
+        <span class="price-sep">–</span>
+        <div class="price-field">
+          <span class="price-currency">S/</span>
+          <input
+            type="number"
+            [(ngModel)]="maxPrecio"
+            (keyup.enter)="applyFilters(0)"
+            placeholder="Máx"
+            min="0"
+          />
+        </div>
+      </div>
+      <button class="btn-apply-price" (click)="applyFilters(0)">Aplicar precio</button>
+    </div>
+  </aside>
+
+  <!-- Contenido de Productos -->
+  <section class="products-section">
+    <!-- Chips de filtros activos -->
+    @if (categoria || talla || color || disponible !== null || minPrecio || maxPrecio || q) {
+      <div class="active-chips">
+        @if (q) {
+          <span class="chip">Búsqueda: "{{ q }}" <button (click)="q = ''; applyFilters(0)">×</button></span>
+        }
+        @if (categoria) {
+          <span class="chip">Categoría: {{ categoria }} <button (click)="categoria = ''; applyFilters(0)">×</button></span>
+        }
+        @if (talla) {
+          <span class="chip">Talla: {{ talla }} <button (click)="talla = ''; applyFilters(0)">×</button></span>
+        }
+        @if (color) {
+          <span class="chip">Color: {{ color }} <button (click)="color = ''; applyFilters(0)">×</button></span>
+        }
+        @if (disponible !== null) {
+          <span class="chip">{{ disponible ? 'En existencia' : 'Agotado' }} <button (click)="disponible = null; applyFilters(0)">×</button></span>
+        }
+        @if (minPrecio || maxPrecio) {
+          <span class="chip">Precio: S/ {{ minPrecio || 0 }} - S/ {{ maxPrecio || '...' }} <button (click)="minPrecio = null; maxPrecio = null; applyFilters(0)">×</button></span>
+        }
+      </div>
+    }
+
+    <!-- Estado de Carga -->
+    @if (loading()) {
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Cargando productos...</p>
+      </div>
+    }
+
+    <!-- Estado de Error -->
+    @if (error()) {
+      <p class="error-box">{{ error() }}</p>
+    }
+
+    <!-- Estado Vacío -->
+    @if (!loading() && products().length === 0) {
+      <div class="empty-state">
+        <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <h3>No se encontraron productos</h3>
+        <p>Intenta ajustar o borrar los filtros aplicados para ver más resultados.</p>
+        <button class="btn-pill-orange" (click)="resetFilters()">Restablecer filtros</button>
+      </div>
+    }
+
+    <!-- Grid de Productos (Estilo Nietux: 3:4 portrait, esquinas redondeadas) -->
+    @if (!loading() && products().length > 0) {
+      <div class="product-grid">
+        @for (product of products(); track product.id) {
+          <article class="product-card" (click)="openDetail(product)">
+            <div class="product-media">
+              @if (product.imageUrl) {
+                <img [src]="product.imageUrl" [alt]="product.name" loading="lazy" />
+              }
+              <button
+                class="quick-add-btn"
+                title="Agregar al carrito"
+                (click)="addToCart(product, $event)"
+                [disabled]="product.stock === 0"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 5v14M5 12h14"/>
+                </svg>
+              </button>
+            </div>
+
+            <div class="product-info">
+              <span class="product-category">{{ product.categoryName || 'Catálogo' }}</span>
+              <h3 class="product-title">{{ product.name }}</h3>
+
+              <div class="product-stars">
+                <span class="star-rating">★★★★★</span>
+                <span class="review-count">(5.0)</span>
+              </div>
+
+              <div class="product-pricing">
+                <span class="price-current">{{ product.price | currency: 'S/ ' }}</span>
+                @if (product.stock > 0) {
+                  <span class="stock-status stock-in">En stock</span>
+                } @else {
+                  <span class="stock-status stock-out">Agotado</span>
+                }
+              </div>
+            </div>
+          </article>
+        }
+      </div>
+
+      <!-- Paginación estilo Nietux -->
+      @if (totalPages > 1) {
+        <nav class="pagination-wrapper" aria-label="Navegación de páginas">
+          <button
+            class="page-btn page-arrow"
+            [disabled]="page === 0"
+            (click)="applyFilters(page - 1)"
+          >
+            ‹ Anterior
+          </button>
+
+          <span class="page-current">Página {{ page + 1 }} de {{ totalPages }}</span>
+
+          <button
+            class="page-btn page-arrow"
+            [disabled]="page >= totalPages - 1"
+            (click)="applyFilters(page + 1)"
+          >
+            Siguiente ›
+          </button>
+        </nav>
+      }
+    }
+  </section>
 </div>
+
+<!-- MODAL DE DETALLE DE PRODUCTO (Galería, Variantes con Stock, Reseñas y Fotos) -->
+@if (isDetailOpen()) {
+  <div class="modal-backdrop" (click)="closeDetail()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <button class="modal-close" (click)="closeDetail()" aria-label="Cerrar modal">×</button>
+
+      @if (detailLoading()) {
+        <div class="modal-loading">
+          <div class="spinner"></div>
+          <p>Cargando detalles del producto...</p>
+        </div>
+      }
+
+      @if (!detailLoading() && selectedProduct()) {
+        <div class="modal-content">
+          <!-- Columna Izquierda: Galería (producto_imagen) -->
+          <div class="detail-gallery">
+            <div class="main-image-box">
+              <img [src]="activeImage()" [alt]="selectedProduct().name" />
+            </div>
+
+            @if (selectedProduct().galeria && selectedProduct().galeria.length > 1) {
+              <div class="thumbnail-strip">
+                @for (img of selectedProduct().galeria; track img.id) {
+                  <button
+                    type="button"
+                    class="thumb-btn"
+                    [class.thumb-btn--active]="activeImage() === img.imageUrl"
+                    (click)="selectImage(img.imageUrl)"
+                  >
+                    <img [src]="img.imageUrl" alt="Miniatura" />
+                  </button>
+                }
+              </div>
+            }
+          </div>
+
+          <!-- Columna Derecha: Información, Variantes con Stock y Reseñas -->
+          <div class="detail-info">
+            <span class="badge-cat">{{ selectedProduct().categoryName || 'Catálogo' }}</span>
+            <h2 class="detail-title">{{ selectedProduct().name }}</h2>
+
+            <div class="detail-price-box">
+              <strong class="detail-price">
+                {{ (selectedVariant()?.price || selectedProduct().price) | currency: 'S/ ' }}
+              </strong>
+              <span class="stock-pill" [class.stock-pill--low]="(selectedVariant()?.stock ?? selectedProduct().stock) < 5">
+                Stock: {{ selectedVariant() ? selectedVariant().stock : selectedProduct().stock }} disponibles
+              </span>
+            </div>
+
+            <p class="detail-desc">{{ selectedProduct().description }}</p>
+
+            <!-- Selector de Variantes (producto_variante + atributo_valor) -->
+            @if (selectedProduct().variantes && selectedProduct().variantes.length > 0) {
+              <div class="variant-selector">
+                <label class="selector-label">Selecciona una Variante / Talla & Color:</label>
+                <div class="variant-cards">
+                  @for (v of selectedProduct().variantes; track v.id) {
+                    <button
+                      type="button"
+                      class="variant-btn"
+                      [class.variant-btn--active]="selectedVariant()?.id === v.id"
+                      (click)="selectVariant(v)"
+                    >
+                      <span class="variant-sku">{{ v.sku }}</span>
+                      <div class="variant-attrs">
+                        @for (attr of v.attributes; track attr.id) {
+                          <span class="attr-tag">{{ attr.attribute }}: {{ attr.value }}</span>
+                        }
+                      </div>
+                      <small class="variant-stock">Stock: {{ v.stock }}</small>
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+
+            <button
+              class="btn-add-main"
+              (click)="addToCartFromDetail()"
+              [disabled]="(selectedVariant() ? selectedVariant().stock : selectedProduct().stock) === 0"
+            >
+              {{ (selectedVariant() ? selectedVariant().stock : selectedProduct().stock) === 0 ? 'Agotado' : 'Agregar al Carrito' }}
+            </button>
+
+            <!-- Sección de Reseñas y Fotos (producto_review + review_foto) -->
+            <div class="reviews-section">
+              <div class="reviews-header">
+                <h3>Reseñas y Fotos de Clientes ({{ reviews().length }})</h3>
+              </div>
+
+              @if (reviewMessage()) {
+                <div class="toast-success">{{ reviewMessage() }}</div>
+              }
+
+              <!-- Lista de Reseñas -->
+              <div class="reviews-list">
+                @if (reviews().length === 0) {
+                  <p class="no-reviews">Aún no hay reseñas para este producto. ¡Sé el primero en opinar!</p>
+                }
+                @for (rev of reviews(); track rev.id) {
+                  <div class="review-card">
+                    <div class="review-meta">
+                      <strong>{{ rev.userName }}</strong>
+                      <span class="review-stars">{{ '★'.repeat(rev.rating) }}{{ '☆'.repeat(5 - rev.rating) }}</span>
+                    </div>
+                    <p class="review-comment">{{ rev.comment }}</p>
+
+                    @if (rev.photos && rev.photos.length > 0) {
+                      <div class="review-photos">
+                        @for (photo of rev.photos; track photo) {
+                          <img [src]="photo" alt="Foto de reseña" loading="lazy" />
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+
+              <!-- Formulario para agregar Reseña con Foto -->
+              <div class="add-review-box">
+                <h4>Deja tu reseña</h4>
+                <div class="form-row">
+                  <input
+                    type="text"
+                    [(ngModel)]="newReview.userName"
+                    placeholder="Tu nombre completo"
+                  />
+                  <select [(ngModel)]="newReview.rating">
+                    <option [value]="5">⭐⭐⭐⭐⭐ (5 estrellas)</option>
+                    <option [value]="4">⭐⭐⭐⭐ (4 estrellas)</option>
+                    <option [value]="3">⭐⭐⭐ (3 estrellas)</option>
+                    <option [value]="2">⭐⭐ (2 estrellas)</option>
+                    <option [value]="1">⭐ (1 estrella)</option>
+                  </select>
+                </div>
+                <textarea
+                  [(ngModel)]="newReview.comment"
+                  rows="3"
+                  placeholder="Escribe tu opinión sobre el producto..."
+                ></textarea>
+                <input
+                  type="url"
+                  [(ngModel)]="newReview.photoUrl"
+                  placeholder="URL de foto opcional (ej. https://images.unsplash.com/...)"
+                />
+                <button class="btn-submit-review" (click)="submitReview()">Publicar Reseña</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+}
