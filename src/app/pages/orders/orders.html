@@ -1,0 +1,139 @@
+<div class="orders-page-container">
+  <div class="orders-hero">
+    <span class="badge-track">Portal de Clientes</span>
+    <h1>Seguimiento de Pedido</h1>
+    <p>Consulta en tiempo real el estado de despacho y entrega de tus compras sin necesidad de iniciar sesión.</p>
+  </div>
+
+  <!-- Formulario de Consulta Rápida -->
+  <div class="tracking-search-card">
+    <form class="search-form" (submit)="$event.preventDefault(); consultar()">
+      <div class="input-field">
+        <label for="codigoInput">Código de Pedido</label>
+        <input
+          type="text"
+          id="codigoInput"
+          placeholder="Ej. PED-966283"
+          [ngModel]="codigo()"
+          (ngModelChange)="codigo.set($event)"
+          name="codigo"
+          required
+        />
+      </div>
+
+      <div class="input-field">
+        <label for="telefonoInput">Número de Celular (+51)</label>
+        <input
+          type="tel"
+          id="telefonoInput"
+          placeholder="Ej. 987654321"
+          maxlength="9"
+          [ngModel]="telefono()"
+          (ngModelChange)="telefono.set($event)"
+          name="telefono"
+          required
+        />
+      </div>
+
+      <button type="submit" class="btn-consultar" [disabled]="loading()">
+        {{ loading() ? 'Buscando...' : '🔍 Consultar Estado' }}
+      </button>
+    </form>
+
+    @if (error()) {
+      <div class="error-msg">
+        <span>⚠️</span>
+        <p>{{ error() }}</p>
+      </div>
+    }
+  </div>
+
+  <!-- Resultado de la consulta -->
+  @if (order(); as o) {
+    <div class="tracking-result-card animated">
+      <div class="order-result-header">
+        <div>
+          <span class="code-title">Código: <strong>{{ o.codigoSeguimiento }}</strong></span>
+          <span class="date-tag">Fecha: {{ o.createdAt | date: 'dd/MM/yyyy, hh:mm a' }}</span>
+        </div>
+        <div class="status-pill" [attr.data-status]="o.status">
+          Estado: {{ o.status }}
+        </div>
+      </div>
+
+      <!-- Stepper / Timeline Visual de 5 estados -->
+      <div class="stepper-wrapper">
+        <div class="stepper">
+          @for (step of steps; track step.key; let idx = $index) {
+            <div
+              class="step-item"
+              [class.completed]="isStepCompleted(step.key, o.status)"
+              [class.active]="isStepActive(step.key, o.status)"
+            >
+              <div class="step-circle">
+                @if (isStepCompleted(step.key, o.status)) {
+                  <span>✓</span>
+                } @else {
+                  <span>{{ idx + 1 }}</span>
+                }
+              </div>
+              <div class="step-info">
+                <strong class="step-label">{{ step.label }}</strong>
+                <span class="step-desc">{{ step.desc }}</span>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Detalles en 2 columnas -->
+      <div class="result-details-grid">
+        <div class="detail-box">
+          <h4>Datos de Despacho y Entrega</h4>
+          <p><strong>Destinatario:</strong> {{ o.customerName }}</p>
+          <p><strong>Teléfono:</strong> +51 {{ o.customerPhone }}</p>
+          <p><strong>Modalidad:</strong> {{ o.tipoEntrega }}</p>
+          @if (o.tipoEntrega === 'DOMICILIO') {
+            <p><strong>Dirección:</strong> {{ o.direccionEnvio }}</p>
+            @if (o.referenciaEnvio) {
+              <p><strong>Referencia:</strong> {{ o.referenciaEnvio }}</p>
+            }
+          }
+          @if (o.tipoEntrega === 'SHALOM') {
+            <p><strong>Agencia Shalom:</strong> Agencia #{{ o.agenciaId }}</p>
+            <p><strong>Receptor en agencia:</strong> {{ o.receptorNombre }} (DNI: {{ o.receptorDni }})</p>
+          }
+          @if (o.tipoEntrega === 'TIENDA') {
+            <p><strong>Punto de recojo:</strong> Tienda Principal San Isidro (Av. Javier Prado Este 2465)</p>
+          }
+          <p><strong>Comprobante emitido:</strong> {{ o.tipoComprobante }} ({{ o.tipoDocumento }}: {{ o.numeroDocumento }})</p>
+        </div>
+
+        <div class="detail-box">
+          <h4>Productos en la Orden</h4>
+          <div class="order-items-mini">
+            @for (item of o.items; track item.productId) {
+              <div class="mini-row">
+                <img
+                  [src]="item.productImageUrl || 'https://picsum.photos/seed/default/60/60'"
+                  [alt]="item.productName"
+                  class="thumb"
+                />
+                <div class="meta">
+                  <span class="name">{{ item.productName }}</span>
+                  <span class="sub">Cant: {{ item.quantity }} × S/ {{ item.unitPrice | number: '1.2-2' }}</span>
+                </div>
+                <span class="amount">S/ {{ item.subtotal | number: '1.2-2' }}</span>
+              </div>
+            }
+          </div>
+
+          <div class="total-bar">
+            <span>Costo de Envío: {{ o.costoEnvio === 0 ? '¡Gratis!' : ('S/ ' + (o.costoEnvio | number: '1.2-2')) }}</span>
+            <strong class="total-big">Total: S/ {{ o.total | number: '1.2-2' }}</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

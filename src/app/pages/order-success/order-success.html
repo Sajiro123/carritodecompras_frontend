@@ -1,29 +1,176 @@
-@if (error()) {
-  <p class="error-box">{{ error() }}</p>
-} @else if (order(); as o) {
-  <div class="success-card">
-    <span class="pill">Pedido #{{ o.id }} confirmado</span>
-    <h1>¡Gracias por tu compra, {{ o.customerName }}!</h1>
-    <p class="muted">
-      Enviaremos tu pedido a <strong>{{ o.address }}</strong> ({{ o.customerEmail }}).
-    </p>
-
-    <ul>
-      @for (item of o.items; track item.productId) {
-        <li>
-          <span>{{ item.quantity }} x {{ item.productName }}</span>
-          <strong>{{ item.unitPrice * item.quantity | currency: 'PEN ' }}</strong>
-        </li>
-      }
-    </ul>
-
-    <div class="total">
-      <span>Total</span>
-      <strong>{{ o.total | currency: 'PEN ' }}</strong>
+<div class="success-page-container">
+  @if (error()) {
+    <div class="error-box">
+      <span class="err-icon">⚠️</span>
+      <p>{{ error() }}</p>
+      <a routerLink="/" class="btn-home">Volver al inicio</a>
     </div>
+  } @else if (order(); as o) {
+    <div class="success-wrapper">
+      <!-- Encabezado con check animado -->
+      <div class="success-hero">
+        <div class="success-check-badge">✓</div>
+        <h1>¡Pedido Confirmado con Éxito!</h1>
+        <p class="hero-subtitle">
+          Gracias por tu compra, <strong>{{ o.customerName }}</strong>. Hemos registrado tu pedido correctamente.
+        </p>
+      </div>
 
-    <a class="btn-primary" routerLink="/">Volver a la tienda</a>
-  </div>
-} @else {
-  <p>Cargando pedido...</p>
-}
+      <!-- Tarjeta principal del código de seguimiento -->
+      <div class="tracking-code-card">
+        <div class="code-details">
+          <span class="label">Código de Seguimiento Oficial</span>
+          <span class="tracking-code">{{ o.codigoSeguimiento }}</span>
+          <span class="hint">Usa este código junto a tu celular (+51 {{ o.customerPhone }}) para rastrear el estado de entrega.</span>
+        </div>
+        <button
+          type="button"
+          class="btn-copy"
+          (click)="copyTrackingCode(o.codigoSeguimiento)"
+        >
+          {{ copied() ? '✓ ¡Código Copiado!' : '📋 Copiar Código' }}
+        </button>
+      </div>
+
+      <div class="details-grid">
+        <!-- Columna izquierda: Información del pedido y entrega -->
+        <div class="card-section">
+          <h3>Detalles de la Entrega</h3>
+
+          <div class="info-row">
+            <span class="row-label">Método:</span>
+            <span class="row-value badge-method">{{ o.tipoEntrega }}</span>
+          </div>
+
+          @if (o.tipoEntrega === 'DOMICILIO') {
+            <div class="info-row">
+              <span class="row-label">Dirección:</span>
+              <span class="row-value">{{ o.direccionEnvio }}</span>
+            </div>
+            @if (o.referenciaEnvio) {
+              <div class="info-row">
+                <span class="row-label">Referencia:</span>
+                <span class="row-value">{{ o.referenciaEnvio }}</span>
+              </div>
+            }
+          }
+
+          @if (o.tipoEntrega === 'SHALOM') {
+            <div class="info-row">
+              <span class="row-label">Agencia:</span>
+              <span class="row-value">Agencia Shalom (ID #{{ o.agenciaId }})</span>
+            </div>
+            <div class="info-row">
+              <span class="row-label">Recoge:</span>
+              <span class="row-value">{{ o.receptorNombre }} (DNI: {{ o.receptorDni }})</span>
+            </div>
+          }
+
+          @if (o.tipoEntrega === 'TIENDA') {
+            <div class="info-row">
+              <span class="row-label">Sede de Recojo:</span>
+              <span class="row-value">Tienda Principal San Isidro (Av. Javier Prado Este 2465)</span>
+            </div>
+          }
+
+          <div class="divider"></div>
+
+          <h3>Comprobante y Contacto</h3>
+          <div class="info-row">
+            <span class="row-label">Tipo Comprobante:</span>
+            <span class="row-value"><strong>{{ o.tipoComprobante }}</strong> ({{ o.tipoDocumento }}: {{ o.numeroDocumento }})</span>
+          </div>
+          @if (o.razonSocial) {
+            <div class="info-row">
+              <span class="row-label">Razón Social:</span>
+              <span class="row-value">{{ o.razonSocial }}</span>
+            </div>
+          }
+          <div class="info-row">
+            <span class="row-label">Correo:</span>
+            <span class="row-value">{{ o.customerEmail }}</span>
+          </div>
+          <div class="info-row">
+            <span class="row-label">Teléfono:</span>
+            <span class="row-value">+51 {{ o.customerPhone }}</span>
+          </div>
+
+          <div class="divider"></div>
+
+          <h3>Método de Pago</h3>
+          <div class="info-row">
+            <span class="row-label">Medio seleccionado:</span>
+            <span class="row-value badge-payment">{{ o.metodoPago }}</span>
+          </div>
+
+          @if (o.metodoPago === 'BCP' || o.metodoPago === 'YAPE_PLIN') {
+            <div class="payment-action-box">
+              <p>Envíanos la constancia o captura de tu transferencia para validar y despachar de inmediato tu orden:</p>
+              <a [href]="getWhatsAppLink(o)" target="_blank" class="btn-whatsapp">
+                💬 Enviar Comprobante por WhatsApp
+              </a>
+            </div>
+          }
+        </div>
+
+        <!-- Columna derecha: Ítems y resumen de costos -->
+        <div class="card-section">
+          <h3>Productos Adquiridos</h3>
+          <div class="items-list">
+            @for (item of o.items; track item.productId) {
+              <div class="product-item">
+                <img
+                  [src]="item.productImageUrl || 'https://picsum.photos/seed/default/80/80'"
+                  [alt]="item.productName"
+                  class="thumb"
+                />
+                <div class="item-meta">
+                  <strong class="name">{{ item.productName }}</strong>
+                  <span class="qty">Cant: {{ item.quantity }} × S/ {{ item.unitPrice | number: '1.2-2' }}</span>
+                </div>
+                <span class="subtotal">S/ {{ item.subtotal | number: '1.2-2' }}</span>
+              </div>
+            }
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="totals-block">
+            <div class="line">
+              <span>Subtotal:</span>
+              <span>S/ {{ o.subtotal | number: '1.2-2' }}</span>
+            </div>
+            <div class="line">
+              <span>Costo de Envío:</span>
+              @if (o.costoEnvio === 0) {
+                <span class="free">¡Envío Gratis!</span>
+              } @else {
+                <span>S/ {{ o.costoEnvio | number: '1.2-2' }}</span>
+              }
+            </div>
+            <div class="divider"></div>
+            <div class="line total-line">
+              <span>Total Pagado:</span>
+              <span class="total-val">S/ {{ o.total | number: '1.2-2' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Acciones finales -->
+      <div class="success-actions">
+        <a [routerLink]="['/orders']" [queryParams]="{ codigo: o.codigoSeguimiento, telefono: o.customerPhone }" class="btn-track">
+          🔍 Rastrear este pedido en línea
+        </a>
+        <a routerLink="/" class="btn-back-home">
+          Volver a la tienda
+        </a>
+      </div>
+    </div>
+  } @else {
+    <div class="loading-box">
+      <div class="spinner"></div>
+      <p>Cargando información del pedido...</p>
+    </div>
+  }
+</div>

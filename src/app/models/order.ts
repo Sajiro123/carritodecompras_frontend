@@ -1,9 +1,28 @@
 export interface CreateOrderPayload {
-  customer: {
-    name: string;
+  contacto: {
+    nombre: string;
+    telefono: string;
     email: string;
-    phone?: string;
-    address: string;
+  };
+  entrega: {
+    tipo: 'DOMICILIO' | 'SHALOM' | 'TIENDA';
+    ubigeoCodigo?: string | null;
+    direccion?: string | null;
+    referencia?: string | null;
+    tiendaId?: number | null;
+    agenciaId?: number | null;
+    receptorNombre?: string | null;
+    receptorDni?: string | null;
+  };
+  comprobante: {
+    tipo: 'BOLETA' | 'FACTURA';
+    tipoDocumento: string;
+    numeroDocumento: string;
+    razonSocial?: string | null;
+    direccionFiscal?: string | null;
+  };
+  pago: {
+    metodo: 'BCP' | 'YAPE_PLIN' | 'CULQI' | 'FLOW';
   };
   items: {
     productId: number;
@@ -13,23 +32,46 @@ export interface CreateOrderPayload {
 
 export interface OrderResponse {
   orderId: number;
+  codigoSeguimiento: string;
+  subtotal: number;
+  costoEnvio: number;
   total: number;
   status: string;
 }
 
+export interface OrderItemDetail {
+  productId: number;
+  productName: string;
+  productImageUrl?: string | null;
+  quantity: number;
+  unitPrice: number;
+  subtotal: number;
+}
+
 export interface OrderDetail {
   id: number;
+  codigoSeguimiento: string;
   customerName: string;
   customerEmail: string;
-  customerPhone: string | null;
-  address: string;
+  customerPhone: string;
+  tipoEntrega: 'DOMICILIO' | 'SHALOM' | 'TIENDA';
+  ubigeoCodigo?: string | null;
+  direccionEnvio?: string | null;
+  referenciaEnvio?: string | null;
+  tiendaId?: number | null;
+  agenciaId?: number | null;
+  receptorNombre?: string | null;
+  receptorDni?: string | null;
+  tipoComprobante: 'BOLETA' | 'FACTURA';
+  tipoDocumento: string;
+  numeroDocumento: string;
+  razonSocial?: string | null;
+  direccionFiscal?: string | null;
+  metodoPago: string;
+  subtotal: number;
+  costoEnvio: number;
   total: number;
-  status: string;
+  status: 'PENDING' | 'PAID' | 'PREPARING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
   createdAt: string;
-  items: {
-    productId: number;
-    productName: string;
-    quantity: number;
-    unitPrice: number;
-  }[];
+  items: OrderItemDetail[];
 }

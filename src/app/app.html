@@ -1,15 +1,129 @@
+<!-- Barra superior informativa -->
+<div class="top-banner">
+  <div class="top-banner__inner">
+    <span>🚚 <strong>Envío Gratis</strong> a todo el Perú en compras mayores a S/ 300.00</span>
+    <span class="banner-separator">•</span>
+    <span>📞 WhatsApp: <strong>+51 987 654 321</strong></span>
+    <span class="banner-separator">•</span>
+    <span>📍 Sede Lima: San Isidro</span>
+  </div>
+</div>
+
+<!-- Barra de navegación principal -->
 <header class="navbar">
   <div class="navbar__inner">
-    <a class="brand" routerLink="/">Mi Tienda</a>
+    <a class="brand" routerLink="/">
+      <span class="brand-icon">🛍️</span>
+      <span class="brand-name">Mi Tienda</span>
+    </a>
+
     <nav class="nav-links">
-      <a routerLink="/">Productos</a>
-      <a class="cart-pill" routerLink="/cart">
-        Carrito <span class="badge">{{ cart.count() }}</span>
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+        Catálogo
       </a>
+      <a routerLink="/orders" routerLinkActive="active">
+        🔍 Rastrear Pedido
+      </a>
+      <a routerLink="/contact" routerLinkActive="active">
+        Contacto
+      </a>
+      <button type="button" class="cart-pill" (click)="openCart($event)" aria-label="Abrir carrito">
+        <span class="cart-icon">🛒</span>
+        <span>Carrito</span>
+        <span class="badge">{{ cart.count() }}</span>
+      </button>
     </nav>
   </div>
 </header>
 
-<main class="container">
+<!-- Contenido principal -->
+<main class="main-content">
   <router-outlet />
 </main>
+
+<!-- Pie de página completo -->
+<footer class="footer">
+  <div class="footer__inner">
+    <div class="footer-grid">
+      <!-- Columna 1: Info empresa -->
+      <div class="footer-col">
+        <div class="footer-brand">
+          <span class="brand-icon">🛍️</span>
+          <h4>Mi Tienda Perú</h4>
+        </div>
+        <p class="footer-desc">
+          Tu tienda online de confianza con envíos seguros a domicilio, agencias Shalom a nivel nacional y recojo en tienda en San Isidro.
+        </p>
+        <ul class="footer-contact-list">
+          <li>📍 Av. Javier Prado Este 2465, San Isidro, Lima</li>
+          <li>📱 +51 987 654 321</li>
+          <li>✉️ atencion&#64;mitienda.pe</li>
+        </ul>
+      </div>
+
+      <!-- Columna 2: Políticas y legales -->
+      <div class="footer-col">
+        <h4 class="col-title">Políticas y Legales</h4>
+        <ul class="footer-links">
+          <li><a routerLink="/policies/terminos-y-condiciones">Términos y Condiciones</a></li>
+          <li><a routerLink="/policies/politicas-de-privacidad">Políticas de Privacidad</a></li>
+          <li><a routerLink="/policies/cambios-y-devoluciones">Cambios y Devoluciones</a></li>
+          <li><a routerLink="/policies/libro-de-reclamaciones">📖 Libro de Reclamaciones</a></li>
+        </ul>
+      </div>
+
+      <!-- Columna 3: Seguimiento y Atencion -->
+      <div class="footer-col">
+        <h4 class="col-title">Servicio al Cliente</h4>
+        <ul class="footer-links">
+          <li><a routerLink="/orders">🔍 Seguimiento de Pedido</a></li>
+          <li><a routerLink="/cart">🛒 Ver mi Carrito</a></li>
+          <li><a routerLink="/checkout">💳 Checkout y Facturación</a></li>
+          <li><a routerLink="/contact">💬 Contacto y Soporte</a></li>
+        </ul>
+      </div>
+
+      <!-- Columna 4: Newsletter -->
+      <div class="footer-col">
+        <h4 class="col-title">Boletín Informativo</h4>
+        <p class="newsletter-desc">
+          Suscríbete para recibir promociones exclusivas, descuentos y cupones de envío gratis.
+        </p>
+        <form class="newsletter-form" (submit)="$event.preventDefault(); subscribeNewsletter()">
+          <div class="newsletter-input-group">
+            <input
+              type="email"
+              placeholder="tu-correo@ejemplo.com"
+              [ngModel]="newsletterEmail()"
+              (ngModelChange)="newsletterEmail.set($event)"
+              name="newsletterEmail"
+              required
+            />
+            <button type="submit" [disabled]="newsletterSending()">
+              {{ newsletterSending() ? '...' : 'Suscribirse' }}
+            </button>
+          </div>
+          @if (newsletterMessage()) {
+            <p class="newsletter-msg" [class.success]="newsletterSuccess()" [class.error]="!newsletterSuccess()">
+              {{ newsletterMessage() }}
+            </p>
+          }
+        </form>
+
+        <div class="payment-badges">
+          <span class="badge-item">💳 Visa / Mastercard</span>
+          <span class="badge-item">💜 Yape / Plin</span>
+          <span class="badge-item">🏦 BCP Transferencia</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>© 2026 Mi Tienda Online S.A.C. RUC: 20608912345. Todos los derechos reservados.</p>
+      <p class="demo-tag">Módulo "Compra": Envíos, Carrito, Checkout en 4 Fases y Seguimiento</p>
+    </div>
+  </div>
+</footer>
+
+<!-- Drawer Lateral del Carrito -->
+<app-cart-drawer />

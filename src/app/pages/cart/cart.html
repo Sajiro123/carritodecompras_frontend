@@ -1,54 +1,188 @@
-<h1>Tu carrito</h1>
-
-@if (cart.items().length === 0) {
-  <div class="empty">
-    <p>Tu carrito está vacío.</p>
-    <a class="btn-primary" routerLink="/">Ver productos</a>
-  </div>
-} @else {
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>Producto</th>
-          <th>Precio</th>
-          <th>Cantidad</th>
-          <th>Subtotal</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (item of cart.items(); track item.product.id) {
-          <tr>
-            <td>{{ item.product.name }}</td>
-            <td>{{ item.product.price | currency: 'PEN ' }}</td>
-            <td>
-              <div class="qty">
-                <button (click)="cart.setQuantity(item.product.id, item.quantity - 1)">-</button>
-                <span>{{ item.quantity }}</span>
-                <button
-                  (click)="cart.setQuantity(item.product.id, item.quantity + 1)"
-                  [disabled]="item.quantity >= item.product.stock"
-                >
-                  +
-                </button>
-              </div>
-            </td>
-            <td>{{ item.product.price * item.quantity | currency: 'PEN ' }}</td>
-            <td>
-              <button class="btn-remove" (click)="cart.remove(item.product.id)">Quitar</button>
-            </td>
-          </tr>
-        }
-      </tbody>
-    </table>
+<div class="cart-container">
+  <div class="cart-header">
+    <h1>Carrito de Compras</h1>
+    <span class="items-count">{{ cart.count() }} producto(s)</span>
   </div>
 
-  <div class="summary">
-    <h2>Total: {{ cart.total() | currency: 'PEN ' }}</h2>
-    <div class="actions">
-      <a class="btn-secondary" routerLink="/">Seguir comprando</a>
-      <a class="btn-primary" routerLink="/checkout">Ir a pagar</a>
+  @if (cart.items().length === 0) {
+    <div class="empty-cart-card">
+      <div class="empty-icon">🛒</div>
+      <h2>Tu carrito está vacío</h2>
+      <p>Aún no has agregado ningún producto a tu carrito de compras.</p>
+      <a class="btn-primary" routerLink="/">Ver Catálogo de Productos</a>
     </div>
-  </div>
-}
+  } @else {
+    <!-- Barra de progreso de envío gratis (S/ 300) -->
+    <div class="shipping-card" [class.free-shipping]="cart.hasFreeShipping()">
+      <div class="shipping-header">
+        <span class="icon">{{ cart.hasFreeShipping() ? '🎉' : '🚚' }}</span>
+        <div class="shipping-texts">
+          <strong>{{ cart.freeShippingMessage() }}</strong>
+          <span class="subtext">
+            {{ cart.hasFreeShipping() ? 'Tu pedido califica para despacho sin costo a domicilio o agencia Shalom.' : 'Válido para envíos a Lima y todas las provincias del Perú.' }}
+          </span>
+        </div>
+      </div>
+      <div class="progress-bar-bg">
+        <div
+          class="progress-bar-fill"
+          [style.width.%]="cart.freeShippingProgress()"
+          [class.complete]="cart.hasFreeShipping()"
+        ></div>
+      </div>
+      <div class="progress-footer">
+        <span>Actual: <strong>S/ {{ cart.subtotal() | number: '1.2-2' }}</strong></span>
+        <span>Meta para Envío Gratis: <strong>S/ 300.00</strong></span>
+      </div>
+    </div>
+
+    <div class="cart-layout">
+      <!-- Tabla de productos -->
+      <div class="table-card">
+        <table class="cart-table">
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Precio Unitario</th>
+              <th>Cantidad / Stock</th>
+              <th>Subtotal</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of cart.items(); track item.product.id) {
+              <tr>
+                <td class="col-product">
+                  <div class="product-cell">
+                    <img
+                      [src]="item.product.imageUrl || 'https://picsum.photos/seed/default/120/120'"
+                      [alt]="item.product.name"
+                      class="product-thumb"
+                    />
+                    <div class="product-info">
+                      <span class="product-name">{{ item.product.name }}</span>
+                      @if (item.product.description) {
+                        <span class="product-desc">{{ item.product.description }}</span>
+                      }
+                      <span class="stock-badge" [class.low-stock]="item.product.stock <= 5">
+                        Stock: {{ item.product.stock }} unid.
+                      </span>
+                    </div>
+                  </div>
+                </td>
+
+                <td class="col-price">
+                  S/ {{ item.product.price | number: '1.2-2' }}
+                </td>
+
+                <td class="col-qty">
+                  <div class="qty-stepper">
+                    <button
+                      type="button"
+                      class="qty-btn"
+                      (click)="cart.decrement(item.product.id)"
+                      aria-label="Disminuir"
+                    >
+                      −
+                    </button>
+                    <input
+                      type="number"
+                      class="qty-input"
+                      [value]="item.quantity"
+                      min="1"
+                      [max]="item.product.stock"
+                      (change)="onQuantityInputChange(item.product.id, $event, item.product.stock)"
+                      aria-label="Cantidad"
+                    />
+                    <button
+                      type="button"
+                      class="qty-btn"
+                      [disabled]="item.quantity >= item.product.stock"
+                      (click)="cart.increment(item.product.id)"
+                      aria-label="Aumentar"
+                    >
+                      +
+                    </button>
+                  </div>
+                  @if (item.quantity >= item.product.stock) {
+                    <span class="stock-limit-alert">Límite de stock alcanzado</span>
+                  }
+                </td>
+
+                <td class="col-subtotal">
+                  <strong>S/ {{ (item.product.price * item.quantity) | number: '1.2-2' }}</strong>
+                </td>
+
+                <td class="col-action">
+                  <button
+                    type="button"
+                    class="btn-remove"
+                    (click)="cart.remove(item.product.id)"
+                    title="Eliminar producto"
+                    aria-label="Eliminar"
+                  >
+                    🗑️
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+
+        <div class="table-card-footer">
+          <a routerLink="/" class="btn-continue-shopping">← Seguir explorando productos</a>
+          <button type="button" class="btn-clear-cart" (click)="cart.clear()">Vaciar carrito</button>
+        </div>
+      </div>
+
+      <!-- Resumen del pedido -->
+      <div class="summary-card">
+        <h3>Resumen del Pedido</h3>
+
+        <div class="summary-line">
+          <span>Subtotal de productos</span>
+          <span>S/ {{ cart.subtotal() | number: '1.2-2' }}</span>
+        </div>
+
+        <div class="summary-line">
+          <span>Costo de envío</span>
+          @if (cart.hasFreeShipping()) {
+            <span class="free-tag">¡GRATIS!</span>
+          } @else {
+            <span class="calc-tag">Se calcula en el checkout</span>
+          }
+        </div>
+
+        <div class="summary-divider"></div>
+
+        <div class="summary-line total-line">
+          <span>Total Estimado</span>
+          <span class="total-amount">S/ {{ cart.subtotal() | number: '1.2-2' }}</span>
+        </div>
+
+        <p class="summary-note">
+          Impuestos (IGV 18%) incluidos. Emitimos Boleta o Factura electrónica.
+        </p>
+
+        <a routerLink="/checkout" class="btn-checkout-primary">
+          Proceder al Checkout (4 Pasos) →
+        </a>
+
+        <div class="trust-features">
+          <div class="feature-item">
+            <span>🔒</span>
+            <span>Pago 100% seguro (BCP, Yape, Plin, Pasarelas)</span>
+          </div>
+          <div class="feature-item">
+            <span>📦</span>
+            <span>Seguimiento en línea con tu código de pedido</span>
+          </div>
+          <div class="feature-item">
+            <span>🏢</span>
+            <span>Opción de recojo gratis en San Isidro</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

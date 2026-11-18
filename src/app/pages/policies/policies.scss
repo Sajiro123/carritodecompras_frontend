@@ -1,0 +1,154 @@
+.policies-container {
+  max-width: 1140px;
+  margin: 36px auto;
+  padding: 0 20px;
+}
+
+.policies-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 32px;
+  align-items: flex-start;
+
+  @media (max-width: 800px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.policies-sidebar {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+
+  h3 {
+    margin: 0 0 16px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #0f172a;
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 10px;
+  }
+
+  .sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    .sidebar-link {
+      display: block;
+      padding: 10px 14px;
+      border-radius: 8px;
+      color: #334155;
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 500;
+      transition: all 0.15s;
+
+      &:hover {
+        background: #f1f5f9;
+        color: #0f172a;
+      }
+
+      &.active {
+        background: #eff6ff;
+        color: #2563eb;
+        font-weight: 700;
+      }
+    }
+  }
+
+  .sidebar-help {
+    margin-top: 24px;
+    padding-top: 18px;
+    border-top: 1px solid #f1f5f9;
+    font-size: 0.8rem;
+    color: #64748b;
+
+    h4 {
+      margin: 0 0 6px;
+      font-size: 0.88rem;
+      color: #0f172a;
+    }
+
+    p {
+      margin: 0;
+      line-height: 1.4;
+    }
+  }
+}
+
+.policy-content-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 36px 40px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+
+  @media (max-width: 600px) {
+    padding: 24px;
+  }
+
+  .policy-header {
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 20px;
+    margin-bottom: 24px;
+
+    .category-badge {
+      display: inline-block;
+      background: #f1f5f9;
+      color: #475569;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 1.85rem;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .updated-date {
+      font-size: 0.8rem;
+      color: #94a3b8;
+    }
+  }
+
+  .policy-body {
+    line-height: 1.7;
+    color: #334155;
+    font-size: 0.95rem;
+
+    h3 {
+      margin: 24px 0 10px;
+      font-size: 1.15rem;
+      color: #0f172a;
+      font-weight: 700;
+    }
+
+    p {
+      margin: 0 0 14px;
+    }
+
+    ul {
+      margin: 0 0 16px 20px;
+    }
+  }
+}
+
+.loading-state,
+.error-state {
+  text-align: center;
+  padding: 60px 20px;
+
+  p {
+    color: #64748b;
+    margin-top: 12px;
+  }
+}

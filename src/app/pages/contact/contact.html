@@ -1,0 +1,112 @@
+<div class="contact-container">
+  <div class="contact-hero">
+    <span class="badge-tag">Atención y Soporte</span>
+    <h1>Contáctanos</h1>
+    <p>Estamos aquí para ayudarte con tus consultas, despachos a nivel nacional o pedidos especiales.</p>
+  </div>
+
+  <div class="contact-grid">
+    <!-- Información de sedes y canales -->
+    <div class="info-card">
+      <h3>Canales de Atención Inmediata</h3>
+
+      <div class="channel-item">
+        <span class="channel-icon">📱</span>
+        <div>
+          <strong>WhatsApp y Central Telefónica</strong>
+          <p>+51 987 654 321</p>
+          <small>Lun a Sáb: 9:00 AM a 8:00 PM</small>
+        </div>
+      </div>
+
+      <div class="channel-item">
+        <span class="channel-icon">✉️</span>
+        <div>
+          <strong>Correo Electrónico Oficial</strong>
+          <p>atencion&#64;mitienda.pe</p>
+          <small>Respuesta en menos de 24 horas</small>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <h3>Nuestras Sedes Físicas</h3>
+
+      <div class="store-item">
+        <span class="store-pin">📍</span>
+        <div>
+          <strong>Tienda Principal San Isidro</strong>
+          <p>Av. Javier Prado Este 2465, Urb. Corpac, San Isidro, Lima</p>
+          <small>Horario: Lunes a Sábado de 9:00 AM a 8:00 PM</small>
+        </div>
+      </div>
+
+      <div class="store-item">
+        <span class="store-pin">📍</span>
+        <div>
+          <strong>Tienda Miraflores</strong>
+          <p>Av. José Larco 812, Miraflores, Lima</p>
+          <small>Horario: Lunes a Domingo de 10:00 AM a 9:00 PM</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Formulario de contacto -->
+    <div class="form-card">
+      <h3>Envíanos un Mensaje</h3>
+      <p class="form-sub">Déjanos tus datos y nos pondremos en contacto contigo a la brevedad.</p>
+
+      @if (sent()) {
+        <div class="success-notice">
+          <span>✓</span>
+          <p><strong>¡Mensaje enviado con éxito!</strong> Nos comunicaremos contigo en breve.</p>
+        </div>
+      }
+
+      <form (submit)="$event.preventDefault(); enviarMensaje()">
+        <div class="form-group">
+          <label for="contactNombre">Nombre Completo *</label>
+          <input
+            type="text"
+            id="contactNombre"
+            placeholder="Ej. María Sánchez"
+            [ngModel]="nombre()"
+            (ngModelChange)="nombre.set($event)"
+            name="nombre"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="contactEmail">Correo Electrónico *</label>
+          <input
+            type="email"
+            id="contactEmail"
+            placeholder="maria@ejemplo.com"
+            [ngModel]="email()"
+            (ngModelChange)="email.set($event)"
+            name="email"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="contactMensaje">Mensaje o Consulta *</label>
+          <textarea
+            id="contactMensaje"
+            rows="5"
+            placeholder="Escribe tu consulta sobre productos, envíos o pedidos..."
+            [ngModel]="mensaje()"
+            (ngModelChange)="mensaje.set($event)"
+            name="mensaje"
+            required
+          ></textarea>
+        </div>
+
+        <button type="submit" class="btn-submit">
+          Enviar Mensaje
+        </button>
+      </form>
+    </div>
+  </div>
+</div>

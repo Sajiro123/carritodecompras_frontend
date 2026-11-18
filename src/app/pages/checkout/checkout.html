@@ -1,67 +1,557 @@
-<h1>Checkout</h1>
-
-@if (cart.items().length === 0) {
-  <div class="box">
-    <p>No hay productos en tu carrito.</p>
-    <a routerLink="/">Volver al catálogo</a>
+<div class="checkout-container">
+  <div class="checkout-header">
+    <div class="header-titles">
+      <span class="badge-step">Proceso Seguro</span>
+      <h1>Finalizar Compra</h1>
+      <p>Completa los 4 pasos interactivos para procesar y confirmar tu pedido.</p>
+    </div>
+    <a routerLink="/cart" class="btn-back-cart">← Volver al Carrito</a>
   </div>
-} @else {
+
   <div class="checkout-layout">
-    <form class="box form" [formGroup]="form" (ngSubmit)="submit()">
-      <h2>Datos de envío</h2>
+    <!-- Formulario en 4 Fases (Columna izquierda) -->
+    <div class="phases-column" [formGroup]="form">
 
-      <label>
-        Nombre completo
-        <input formControlName="name" placeholder="Ana Pérez" />
-        @if (form.controls.name.touched && form.controls.name.invalid) {
-          <small class="err">El nombre es obligatorio</small>
+      <!-- ==============================================
+           SECCIÓN 1: DATOS DE CONTACTO
+           ============================================== -->
+      <section class="checkout-card phase-card">
+        <div class="phase-header">
+          <span class="step-num">1</span>
+          <div>
+            <h3>Datos de Contacto</h3>
+            <span class="phase-subtitle">Te enviaremos la confirmación y el código de seguimiento.</span>
+          </div>
+        </div>
+
+        <div class="fields-grid">
+          <div class="form-group full-width">
+            <label for="contactoNombre">Nombre y Apellidos *</label>
+            <input
+              type="text"
+              id="contactoNombre"
+              formControlName="contactoNombre"
+              placeholder="Ej. Juan Pérez Quispe"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="contactoTelefono">Teléfono Celular *</label>
+            <div class="phone-input-wrapper">
+              <span class="country-prefix">🇵🇪 +51</span>
+              <input
+                type="tel"
+                id="contactoTelefono"
+                formControlName="contactoTelefono"
+                placeholder="987654321"
+                maxlength="9"
+                required
+              />
+            </div>
+            <span class="input-hint">9 dígitos válidos de Perú</span>
+          </div>
+
+          <div class="form-group">
+            <label for="contactoEmail">Correo Electrónico *</label>
+            <input
+              type="email"
+              id="contactoEmail"
+              formControlName="contactoEmail"
+              placeholder="juan.perez@example.com"
+              required
+            />
+            <span class="input-hint">Recibirás tu boleta/factura aquí</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==============================================
+           SECCIÓN 2: MÉTODO DE ENTREGA
+           ============================================== -->
+      <section class="checkout-card phase-card">
+        <div class="phase-header">
+          <span class="step-num">2</span>
+          <div>
+            <h3>Método de Entrega</h3>
+            <span class="phase-subtitle">Selecciona cómo deseas recibir o recoger tu pedido.</span>
+          </div>
+        </div>
+
+        <!-- Pestañas de método de entrega -->
+        <div class="delivery-tabs">
+          <button
+            type="button"
+            class="tab-btn"
+            [class.active]="deliveryType() === 'DOMICILIO'"
+            (click)="setDeliveryType('DOMICILIO')"
+          >
+            <span class="tab-icon">🏠</span>
+            <div class="tab-texts">
+              <strong class="tab-title">A Domicilio</strong>
+              <span class="tab-sub">Lima y Provincias</span>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            class="tab-btn"
+            [class.active]="deliveryType() === 'SHALOM'"
+            (click)="setDeliveryType('SHALOM')"
+          >
+            <span class="tab-icon">📦</span>
+            <div class="tab-texts">
+              <strong class="tab-title">Agencia Shalom</strong>
+              <span class="tab-sub">Recojo nacional</span>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            class="tab-btn"
+            [class.active]="deliveryType() === 'TIENDA'"
+            (click)="setDeliveryType('TIENDA')"
+          >
+            <span class="tab-icon">🏬</span>
+            <div class="tab-texts">
+              <strong class="tab-title">Recojo en Tienda</strong>
+              <span class="tab-sub">San Isidro (Gratis)</span>
+            </div>
+          </button>
+        </div>
+
+        <!-- Contenido según opción seleccionada -->
+        @if (deliveryType() === 'DOMICILIO') {
+          <div class="tab-content animated">
+            <div class="form-group full-width autocomplete-group">
+              <label for="ubigeoSearch">Distrito / Provincia / Departamento (Ubigeo Perú) *</label>
+              <div class="autocomplete-input-wrapper">
+                <input
+                  type="text"
+                  id="ubigeoSearch"
+                  [value]="ubigeoQuery()"
+                  (input)="onSearchUbigeo($event)"
+                  placeholder="Escribe tu distrito (Ej. Miraflores, San Isidro, Surco, Arequipa...)"
+                  autocomplete="off"
+                />
+                <span class="search-badge">🔍</span>
+              </div>
+
+              @if (showUbigeoDropdown() && ubigeosList().length > 0) {
+                <div class="ubigeo-dropdown">
+                  @for (u of ubigeosList(); track u.codigo) {
+                    <div class="ubigeo-item" (click)="selectUbigeo(u)">
+                      <div class="ubigeo-main">{{ u.label }}</div>
+                      <div class="ubigeo-extra">
+                        <span class="zone-tag">{{ u.zona }}</span>
+                        <span class="cost-tag">Envío: S/ {{ u.costoEnvio | number: '1.2-2' }}</span>
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+
+              @if (selectedUbigeo()) {
+                <div class="selected-ubigeo-pill">
+                  <span>📍 Distrito seleccionado: <strong>{{ selectedUbigeo()!.label }}</strong></span>
+                  <span class="rate">Tarifa: S/ {{ shippingCost() | number: '1.2-2' }} ({{ calculoEnvio()?.diasEntrega || '24 a 48h' }})</span>
+                </div>
+              }
+            </div>
+
+            <div class="fields-grid">
+              <div class="form-group full-width">
+                <label for="direccion">Dirección exacta (Calle, Av., Nro, Mz, Dpto) *</label>
+                <input
+                  type="text"
+                  id="direccion"
+                  formControlName="direccion"
+                  placeholder="Ej. Av. Larco 456, Dpto 302"
+                />
+              </div>
+
+              <div class="form-group full-width">
+                <label for="referencia">Referencia de entrega (Opcional)</label>
+                <input
+                  type="text"
+                  id="referencia"
+                  formControlName="referencia"
+                  placeholder="Ej. Frente al parque, edificio con rejas blancas"
+                />
+              </div>
+            </div>
+          </div>
         }
-      </label>
 
-      <label>
-        Correo electrónico
-        <input formControlName="email" type="email" placeholder="ana@mail.com" />
-        @if (form.controls.email.touched && form.controls.email.invalid) {
-          <small class="err">Ingresa un email válido</small>
+        @if (deliveryType() === 'SHALOM') {
+          <div class="tab-content animated">
+            <div class="shalom-banner">
+              <span class="shalom-logo">📦 <strong>SHALOM EMPRESARIAL</strong></span>
+              <p>Tu paquete será enviado a la agencia Shalom de tu preferencia. Presentarás tu DNI físico para recogerlo.</p>
+            </div>
+
+            <div class="form-group full-width">
+              <label for="agenciaId">Selecciona la Agencia Shalom de destino *</label>
+              <select id="agenciaId" formControlName="agenciaId">
+                @for (ag of agencias(); track ag.id) {
+                  <option [value]="ag.id">
+                    {{ ag.departamento }} — {{ ag.nombre }} ({{ ag.direccion }} - {{ ag.distrito }})
+                  </option>
+                }
+              </select>
+            </div>
+
+            <div class="fields-grid">
+              <div class="form-group">
+                <label for="receptorNombre">Nombre completo de quien recoge *</label>
+                <input
+                  type="text"
+                  id="receptorNombre"
+                  formControlName="receptorNombre"
+                  placeholder="Como figura en su DNI"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="receptorDni">DNI de quien recoge (8 dígitos) *</label>
+                <input
+                  type="text"
+                  id="receptorDni"
+                  formControlName="receptorDni"
+                  placeholder="8 dígitos"
+                  maxlength="8"
+                />
+              </div>
+            </div>
+          </div>
         }
-      </label>
 
-      <label>
-        Teléfono (opcional)
-        <input formControlName="phone" placeholder="999888777" />
-      </label>
+        @if (deliveryType() === 'TIENDA') {
+          <div class="tab-content animated">
+            <div class="store-notice">
+              <span class="free-icon">🎉 <strong>¡Costo S/ 0.00!</strong></span>
+              <span>Puedes recoger tu compra en nuestra sede física el mismo día hábil tras la confirmación de pago.</span>
+            </div>
 
-      <label>
-        Dirección
-        <input formControlName="address" placeholder="Av. Lima 123" />
-        @if (form.controls.address.touched && form.controls.address.invalid) {
-          <small class="err">La dirección es obligatoria</small>
+            <div class="stores-list">
+              @for (st of tiendas(); track st.id) {
+                <label class="store-card" [class.selected]="form.controls.tiendaId.value === st.id">
+                  <input
+                    type="radio"
+                    name="tiendaId"
+                    [value]="st.id"
+                    [checked]="form.controls.tiendaId.value === st.id"
+                    (change)="form.patchValue({ tiendaId: st.id })"
+                  />
+                  <div class="store-details">
+                    <strong class="store-name">{{ st.nombre }}</strong>
+                    <span class="store-address">📍 {{ st.direccion }}, {{ st.distrito }}</span>
+                    <span class="store-hours">🕒 {{ st.horario }}</span>
+                    @if (st.telefono) {
+                      <span class="store-phone">📞 {{ st.telefono }}</span>
+                    }
+                  </div>
+                </label>
+              }
+            </div>
+          </div>
         }
-      </label>
+      </section>
+
+      <!-- ==============================================
+           SECCIÓN 3: COMPROBANTE DE PAGO
+           ============================================== -->
+      <section class="checkout-card phase-card">
+        <div class="phase-header">
+          <span class="step-num">3</span>
+          <div>
+            <h3>Comprobante de Pago</h3>
+            <span class="phase-subtitle">Emitimos comprobantes electrónicos con validez legal ante SUNAT.</span>
+          </div>
+        </div>
+
+        <div class="receipt-selector">
+          <button
+            type="button"
+            class="receipt-btn"
+            [class.active]="receiptType() === 'BOLETA'"
+            (click)="setReceiptType('BOLETA')"
+          >
+            <span class="receipt-icon">📄</span>
+            <strong>Boleta de Venta</strong>
+            <small>DNI, Carnet de Extranjería o Pasaporte</small>
+          </button>
+
+          <button
+            type="button"
+            class="receipt-btn"
+            [class.active]="receiptType() === 'FACTURA'"
+            (click)="setReceiptType('FACTURA')"
+          >
+            <span class="receipt-icon">📑</span>
+            <strong>Factura Electrónica</strong>
+            <small>RUC 11 dígitos y Razón Social</small>
+          </button>
+        </div>
+
+        @if (receiptType() === 'BOLETA') {
+          <div class="receipt-body animated">
+            <label class="checkbox-label">
+              <input type="checkbox" formControlName="usarMismosDatosBoleta" />
+              <span>Usar los mismos datos del contacto principal</span>
+            </label>
+
+            <div class="fields-grid" [class.dimmed]="form.controls.usarMismosDatosBoleta.value">
+              <div class="form-group">
+                <label for="tipoDocumento">Tipo de Documento</label>
+                <select id="tipoDocumento" formControlName="tipoDocumento">
+                  <option value="DNI">DNI (Documento Nacional de Identidad)</option>
+                  <option value="CE">Carnet de Extranjería</option>
+                  <option value="PASAPORTE">Pasaporte</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="numeroDocumento">Número de Documento *</label>
+                <input
+                  type="text"
+                  id="numeroDocumento"
+                  formControlName="numeroDocumento"
+                  placeholder="Ej. 45678901"
+                />
+              </div>
+            </div>
+          </div>
+        }
+
+        @if (receiptType() === 'FACTURA') {
+          <div class="receipt-body animated">
+            <div class="fields-grid">
+              <div class="form-group full-width">
+                <label for="rucNumero">Número de RUC (Exactamente 11 dígitos) *</label>
+                <input
+                  type="text"
+                  id="rucNumero"
+                  formControlName="numeroDocumento"
+                  placeholder="Ej. 20601234567"
+                  maxlength="11"
+                  required
+                />
+                <span class="input-hint">Debe iniciar con 10 o 20 y tener 11 dígitos.</span>
+              </div>
+
+              <div class="form-group full-width">
+                <label for="razonSocial">Razón Social de la Empresa *</label>
+                <input
+                  type="text"
+                  id="razonSocial"
+                  formControlName="razonSocial"
+                  placeholder="Ej. SERVICIOS Y COMERCIO S.A.C."
+                  required
+                />
+              </div>
+
+              <div class="form-group full-width">
+                <label for="direccionFiscal">Dirección Fiscal (Opcional)</label>
+                <input
+                  type="text"
+                  id="direccionFiscal"
+                  formControlName="direccionFiscal"
+                  placeholder="Ej. Av. República de Panamá 3505, San Isidro, Lima"
+                />
+              </div>
+            </div>
+          </div>
+        }
+      </section>
+
+      <!-- ==============================================
+           SECCIÓN 4: MÉTODO DE PAGO
+           ============================================== -->
+      <section class="checkout-card phase-card">
+        <div class="phase-header">
+          <span class="step-num">4</span>
+          <div>
+            <h3>Método de Pago</h3>
+            <span class="phase-subtitle">Selecciona tu medio preferido de pago seguro en Perú.</span>
+          </div>
+        </div>
+
+        <div class="payment-methods-grid">
+          <!-- BCP -->
+          <div
+            class="payment-option"
+            [class.selected]="paymentMethod() === 'BCP'"
+            (click)="setPaymentMethod('BCP')"
+          >
+            <div class="option-header">
+              <div class="radio-circle"></div>
+              <span class="opt-name">🏦 Transferencia BCP</span>
+            </div>
+            <p class="opt-desc">Cero comisiones desde banca móvil o web BCP.</p>
+          </div>
+
+          <!-- YAPE / PLIN -->
+          <div
+            class="payment-option"
+            [class.selected]="paymentMethod() === 'YAPE_PLIN'"
+            (click)="setPaymentMethod('YAPE_PLIN')"
+          >
+            <div class="option-header">
+              <div class="radio-circle"></div>
+              <span class="opt-name">📱 Yape / Plin</span>
+            </div>
+            <p class="opt-desc">Pago rápido desde tu celular al instante.</p>
+          </div>
+
+          <!-- PASARELA CULQI / FLOW -->
+          <div
+            class="payment-option"
+            [class.selected]="paymentMethod() === 'CULQI'"
+            (click)="setPaymentMethod('CULQI')"
+          >
+            <div class="option-header">
+              <div class="radio-circle"></div>
+              <span class="opt-name">💳 Tarjeta (Culqi)</span>
+            </div>
+            <p class="opt-desc">Visa, Mastercard, Diners, American Express.</p>
+          </div>
+
+          <!-- FLOW -->
+          <div
+            class="payment-option"
+            [class.selected]="paymentMethod() === 'FLOW'"
+            (click)="setPaymentMethod('FLOW')"
+          >
+            <div class="option-header">
+              <div class="radio-circle"></div>
+              <span class="opt-name">🌐 Pasarela Flow</span>
+            </div>
+            <p class="opt-desc">Pago efectivo, agentes y banca por internet.</p>
+          </div>
+        </div>
+
+        <!-- Instrucciones según método -->
+        <div class="payment-instructions animated">
+          @if (paymentMethod() === 'BCP') {
+            <div class="info-box bcp-box">
+              <h4>Datos para la Transferencia BCP:</h4>
+              <p><strong>Banco:</strong> Banco de Crédito del Perú (BCP)</p>
+              <p><strong>Cuenta Corriente Soles:</strong> 193-98765432-0-12</p>
+              <p><strong>Código Interbancario (CCI):</strong> 002-193-0098765432012-18</p>
+              <p><strong>Titular:</strong> Mi Tienda Online S.A.C. (RUC 20608912345)</p>
+              <p class="foot-note">Tras confirmar tu pedido, podrás enviar el voucher por WhatsApp con tu Código de Seguimiento.</p>
+            </div>
+          }
+
+          @if (paymentMethod() === 'YAPE_PLIN') {
+            <div class="info-box yape-box">
+              <h4>Datos para Yape / Plin:</h4>
+              <p><strong>Número de Celular:</strong> +51 987 654 321</p>
+              <p><strong>A nombre de:</strong> Mi Tienda Perú / Fernando SAC</p>
+              <p class="foot-note">Escanea el código o digita el número desde tu app de Yape o Plin tras confirmar el pedido.</p>
+            </div>
+          }
+
+          @if (paymentMethod() === 'CULQI' || paymentMethod() === 'FLOW') {
+            <div class="info-box card-box">
+              <h4>Pasarela de Pagos Segura ({{ paymentMethod() }}):</h4>
+              <p>Serás redirigido a la pasarela cifrada de 256 bits para ingresar tus datos de tarjeta de forma segura.</p>
+              <div class="cards-logos">
+                <span>💳 VISA</span>
+                <span>💳 MASTERCARD</span>
+                <span>💳 AMEX</span>
+                <span>💳 DINERS</span>
+              </div>
+            </div>
+          }
+        </div>
+      </section>
 
       @if (error()) {
-        <p class="err-box">{{ error() }}</p>
+        <div class="error-alert">
+          <span class="error-icon">⚠️</span>
+          <span>{{ error() }}</span>
+        </div>
       }
+    </div>
 
-      <button class="btn-submit" type="submit" [disabled]="form.invalid || sending()">
-        {{ sending() ? 'Procesando...' : 'Confirmar pedido' }}
-      </button>
-    </form>
+    <!-- Columna derecha: Resumen Sticky y Confirmación -->
+    <aside class="summary-column">
+      <div class="summary-sticky-card">
+        <h3>Resumen de la Compra</h3>
 
-    <aside class="box summary">
-      <h2>Resumen</h2>
-      <ul>
-        @for (item of cart.items(); track item.product.id) {
-          <li>
-            <span>{{ item.quantity }} x {{ item.product.name }}</span>
-            <strong>{{ item.product.price * item.quantity | currency: 'PEN ' }}</strong>
-          </li>
-        }
-      </ul>
-      <div class="total">
-        <span>Total</span>
-        <strong>{{ cart.total() | currency: 'PEN ' }}</strong>
+        <!-- Lista condensada de productos -->
+        <div class="summary-items-list">
+          @for (item of cart.items(); track item.product.id) {
+            <div class="mini-item">
+              <img
+                [src]="item.product.imageUrl || 'https://picsum.photos/seed/default/80/80'"
+                [alt]="item.product.name"
+                class="mini-thumb"
+              />
+              <div class="mini-info">
+                <span class="mini-name">{{ item.product.name }}</span>
+                <span class="mini-qty">Cant: {{ item.quantity }} × S/ {{ item.product.price | number: '1.2-2' }}</span>
+              </div>
+              <span class="mini-subtotal">S/ {{ (item.product.price * item.quantity) | number: '1.2-2' }}</span>
+            </div>
+          }
+        </div>
+
+        <!-- Barra de progreso / badge de envío gratis -->
+        <div class="free-shipping-indicator" [class.achieved]="cart.hasFreeShipping()">
+          <span>{{ cart.hasFreeShipping() ? '🎉 ¡Envío Gratis Aplicado!' : cart.freeShippingMessage() }}</span>
+        </div>
+
+        <div class="summary-divider"></div>
+
+        <!-- Líneas de costos -->
+        <div class="cost-line">
+          <span>Subtotal</span>
+          <span>S/ {{ cart.subtotal() | number: '1.2-2' }}</span>
+        </div>
+
+        <div class="cost-line">
+          <span>Envío ({{ deliveryType() }})</span>
+          @if (shippingCost() === 0) {
+            <span class="badge-free">¡GRATIS!</span>
+          } @else {
+            <span>S/ {{ shippingCost() | number: '1.2-2' }}</span>
+          }
+        </div>
+
+        <div class="summary-divider"></div>
+
+        <div class="cost-line grand-total-line">
+          <span>Total a Pagar</span>
+          <span class="grand-total-val">S/ {{ grandTotal() | number: '1.2-2' }}</span>
+        </div>
+
+        <button
+          type="button"
+          class="btn-confirm-order"
+          [disabled]="sending()"
+          (click)="submitOrder()"
+        >
+          @if (sending()) {
+            <span class="spinner"></span> Procesando pedido...
+          } @else {
+            🔒 Confirmar y Pagar Pedido (S/ {{ grandTotal() | number: '1.2-2' }})
+          }
+        </button>
+
+        <p class="legal-disclaimer">
+          Al hacer clic en "Confirmar y Pagar Pedido", aceptas nuestros
+          <a routerLink="/policies/terminos-y-condiciones" target="_blank">Términos y Condiciones</a> y nuestras
+          <a routerLink="/policies/politicas-de-privacidad" target="_blank">Políticas de Privacidad</a>.
+        </p>
+
+        <div class="security-guarantee">
+          <span class="lock-icon">🛡️</span>
+          <span>Transacción cifrada SSL 256-bit y respaldo ante SUNAT.</span>
+        </div>
       </div>
     </aside>
   </div>
-}
+</div>
