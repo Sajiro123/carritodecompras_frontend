@@ -8,29 +8,252 @@
   <select
     id="folder"
     [ngModel]="selectedFolder()"
-    (ngModelChange)="selectedFolder.set($event)"
+    [disabled]="submitting()"
+    (ngModelChange)="onFolderChange($event)"
   >
     @for (folder of folders; track folder) {
-      <option [value]="folder">{{ folder }}</option>
+      <option [value]="folder">{{ folderMeta[folder].label }} ({{ folder }}/)</option>
     }
   </select>
 </div>
 
-<app-image-upload
-  [folder]="selectedFolder()"
-  label="Haz clic o arrastra una imagen aquí"
-  (uploaded)="onUploaded($event)"
-  (removed)="onRemoved($event)"
-/>
+<p class="folder-helper">{{ activeMeta().helper }}</p>
+
+<form [formGroup]="activeForm()" (ngSubmit)="submit()" class="upload-form" novalidate>
+  <section class="form-panel">
+    <h2>Datos obligatorios ({{ activeMeta().label }})</h2>
+
+    @switch (selectedFolder()) {
+      @case ('productos') {
+        <div class="fields-grid">
+          <label class="field full">
+            <span>Nombre del producto <strong class="req">*</strong></span>
+            <input formControlName="name" type="text" placeholder="Ej. Polo básico oversize" />
+            @if (hasError('name')) {
+              <small class="field-err">Ingresa el nombre del producto (máx. 120 caracteres).</small>
+            }
+          </label>
+
+          <label class="field">
+            <span>Precio (S/) <strong class="req">*</strong></span>
+            <input formControlName="price" type="number" step="0.01" min="0.01" placeholder="39.90" />
+            @if (hasError('price')) {
+              <small class="field-err">Ingresa un precio mayor a 0.</small>
+            }
+          </label>
+
+          <label class="field">
+            <span>Stock <strong class="req">*</strong></span>
+            <input formControlName="stock" type="number" step="1" min="0" placeholder="25" />
+            @if (hasError('stock')) {
+              <small class="field-err">Ingresa un stock entero igual o mayor a 0.</small>
+            }
+          </label>
+
+          <label class="field full">
+            <span>Descripción (opcional)</span>
+            <textarea formControlName="description" rows="2" placeholder="Detalle corto del producto..."></textarea>
+          </label>
+        </div>
+      }
+
+      @case ('categorias') {
+        <div class="fields-grid">
+          <label class="field">
+            <span>Nombre de categoría <strong class="req">*</strong></span>
+            <input
+              formControlName="nombre"
+              type="text"
+              placeholder="Ej. Perfumes cítricos"
+              (input)="onCategoryNameInput()"
+            />
+            @if (hasError('nombre')) {
+              <small class="field-err">El nombre de la categoría es obligatorio.</small>
+            }
+          </label>
+
+          <label class="field">
+            <span>Slug <strong class="req">*</strong></span>
+            <input
+              formControlName="slug"
+              type="text"
+              placeholder="perfumes-citricos"
+              (input)="onSlugInput()"
+            />
+            @if (hasError('slug')) {
+              <small class="field-err">Usa solo minúsculas, números y guiones (ej. perfumes-citricos).</small>
+            }
+          </label>
+
+          <label class="field full">
+            <span>Descripción (opcional)</span>
+            <textarea formControlName="descripcion" rows="2" placeholder="Descripción breve de la categoría..."></textarea>
+          </label>
+        </div>
+      }
+
+      @case ('banners') {
+        <div class="fields-grid">
+          <label class="field">
+            <span>Ubicación <strong class="req">*</strong></span>
+            <select formControlName="ubicacion">
+              <option value="HERO">HERO (Portada principal)</option>
+              <option value="BARRA_ANUNCIO">BARRA_ANUNCIO</option>
+              <option value="MARQUEE">MARQUEE</option>
+            </select>
+            @if (hasError('ubicacion')) {
+              <small class="field-err">Selecciona la ubicación del banner.</small>
+            }
+          </label>
+
+          <label class="field">
+            <span>Título <strong class="req">*</strong></span>
+            <input formControlName="titulo" type="text" placeholder="Ej. Nueva colección de verano" />
+            @if (hasError('titulo')) {
+              <small class="field-err">El título del banner es obligatorio.</small>
+            }
+          </label>
+
+          <label class="field full">
+            <span>Subtítulo (opcional)</span>
+            <input formControlName="subtitulo" type="text" placeholder="Hasta 20% de descuento" />
+          </label>
+
+          <label class="field">
+            <span>Texto del botón CTA (opcional)</span>
+            <input formControlName="textoCta" type="text" placeholder="Ver catálogo" />
+          </label>
+
+          <label class="field">
+            <span>URL CTA (opcional)</span>
+            <input formControlName="urlCta" type="text" placeholder="/productos" />
+          </label>
+        </div>
+      }
+
+      @case ('resenas') {
+        <div class="fields-grid">
+          <label class="field">
+            <span>ID del producto <strong class="req">*</strong></span>
+            <input formControlName="productoId" type="number" step="1" min="1" placeholder="1" />
+            @if (hasError('productoId')) {
+              <small class="field-err">Ingresa un ID de producto válido.</small>
+            }
+          </label>
+
+          <label class="field">
+            <span>Calificación (1 a 5) <strong class="req">*</strong></span>
+            <select formControlName="calificacion">
+              <option [ngValue]="5">5 estrellas</option>
+              <option [ngValue]="4">4 estrellas</option>
+              <option [ngValue]="3">3 estrellas</option>
+              <option [ngValue]="2">2 estrellas</option>
+              <option [ngValue]="1">1 estrella</option>
+            </select>
+          </label>
+
+          <label class="field full">
+            <span>Nombre del autor <strong class="req">*</strong></span>
+            <input formControlName="nombreAutor" type="text" placeholder="Ej. Camila Pérez" />
+            @if (hasError('nombreAutor')) {
+              <small class="field-err">Ingresa el nombre del autor.</small>
+            }
+          </label>
+
+          <label class="field full">
+            <span>Comentario <strong class="req">*</strong></span>
+            <textarea formControlName="comentario" rows="2" placeholder="Opinión del cliente..."></textarea>
+            @if (hasError('comentario')) {
+              <small class="field-err">El comentario es obligatorio.</small>
+            }
+          </label>
+        </div>
+      }
+
+      @case ('comprobantes') {
+        <div class="fields-grid">
+          <label class="field">
+            <span>ID o código de pedido <strong class="req">*</strong></span>
+            <input formControlName="pedidoRef" type="text" placeholder="Ej. #104 o PED-2026-01" />
+            @if (hasError('pedidoRef')) {
+              <small class="field-err">Ingresa el ID o código del pedido.</small>
+            }
+          </label>
+
+          <label class="field">
+            <span>Método de pago <strong class="req">*</strong></span>
+            <select formControlName="metodoPago">
+              <option value="BCP">BCP</option>
+              <option value="FLOW">Flow</option>
+              <option value="CULQI">Culqi</option>
+            </select>
+          </label>
+
+          <label class="field full">
+            <span>N° de operación / referencia <strong class="req">*</strong></span>
+            <input formControlName="numeroOperacion" type="text" placeholder="Ej. OP-98765432" />
+            @if (hasError('numeroOperacion')) {
+              <small class="field-err">Ingresa el número de operación del pago.</small>
+            }
+          </label>
+        </div>
+      }
+    }
+  </section>
+
+  <section class="image-step">
+    <h2>Imagen <strong class="req">*</strong></h2>
+    <app-image-upload
+      [folder]="selectedFolder()"
+      [autoUpload]="false"
+      [externalBusy]="submitting()"
+      label="Haz clic o arrastra una imagen aquí"
+      (fileChanged)="onFileChanged($event)"
+    />
+    @if (submitAttempted() && !selectedFile()) {
+      <small class="field-err">Debes seleccionar una imagen antes de continuar.</small>
+    }
+  </section>
+
+  @if (errorMessage()) {
+    <p class="alert-err">{{ errorMessage() }}</p>
+  }
+
+  @if (successMessage()) {
+    <p class="alert-ok">{{ successMessage() }}</p>
+  }
+
+  <div class="submit-row">
+    <button type="submit" class="btn-submit" [disabled]="submitting()">
+      {{ submitting() ? 'Subiendo y guardando...' : activeMeta().submitLabel }}
+    </button>
+  </div>
+</form>
 
 @if (history().length > 0) {
   <section class="history">
     <h2>Archivos subidos en esta sesión</h2>
     <div class="grid">
-      @for (item of history(); track item.path) {
+      @for (item of history(); track item.upload.path) {
         <article class="card">
-          <img [src]="item.publicUrl" [alt]="item.path" />
-          <code>{{ item.publicUrl }}</code>
+          <img [src]="item.upload.publicUrl" [alt]="item.title" />
+          <div class="card-head">
+            <span class="badge">{{ item.folder }}</span>
+            @if (item.savedInBackend) {
+              <span class="badge saved">Guardado #{{ item.productId }}</span>
+            }
+          </div>
+          <strong>{{ item.title }}</strong>
+          <small class="sub">{{ item.subtitle }}</small>
+          <code>{{ item.upload.publicUrl }}</code>
+          <div class="card-actions">
+            <button type="button" class="btn-sec" (click)="copyUrl(item)">
+              {{ copiedPath() === item.upload.path ? 'Copiada' : 'Copiar URL' }}
+            </button>
+            <button type="button" class="btn-del" (click)="deleteFromHistory(item)">
+              Eliminar
+            </button>
+          </div>
         </article>
       }
     </div>

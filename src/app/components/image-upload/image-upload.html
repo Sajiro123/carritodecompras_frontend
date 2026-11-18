@@ -3,10 +3,10 @@
     <input
       type="file"
       accept="image/jpeg,image/png,image/webp,image/gif"
-      [disabled]="uploading()"
+      [disabled]="busy()"
       (change)="onFileSelected($event)"
     />
-    <span class="title">{{ uploading() ? 'Subiendo a Supabase...' : label() }}</span>
+    <span class="title">{{ busy() ? 'Subiendo a Supabase...' : label() }}</span>
     <small>JPG, PNG, WEBP o GIF · Máximo 5 MB · Carpeta: <strong>{{ folder() }}/</strong></small>
   </label>
 
@@ -25,8 +25,17 @@
             <button type="button" class="btn-sec" (click)="copyUrl()">
               {{ copied() ? 'URL copiada' : 'Copiar URL pública' }}
             </button>
-            <button type="button" class="btn-del" [disabled]="uploading()" (click)="removeFile()">
+            <button type="button" class="btn-del" [disabled]="busy()" (click)="removeFile()">
               Eliminar
+            </button>
+          </div>
+        </div>
+      } @else {
+        <div class="meta">
+          <code>{{ selectedFileName() }}</code>
+          <div class="actions">
+            <button type="button" class="btn-del" [disabled]="busy()" (click)="clearSelection()">
+              Quitar imagen
             </button>
           </div>
         </div>

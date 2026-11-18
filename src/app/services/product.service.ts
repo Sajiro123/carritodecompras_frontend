@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { API_URL } from '../core/api.config';
-import { Product } from '../models/product';
+import { CreateProductRequest, Product } from '../models/product';
 
 @Injectable({ providedIn: 'root' })
 export class ProductService {
@@ -11,9 +11,9 @@ export class ProductService {
   private readonly endpoint = `${API_URL}/products`;
 
   getAll(params?: Record<string, any>): Observable<Product[]> {
-    return this.http.get<any>(this.endpoint, { params }).pipe(
-      map((res: any) => (Array.isArray(res) ? res : (res?.content ?? [])))
-    );
+    return this.http
+      .get<any>(this.endpoint, { params })
+      .pipe(map((res: any) => (Array.isArray(res) ? res : (res?.content ?? []))));
   }
 
   getPaged(params?: Record<string, any>): Observable<any> {
@@ -42,5 +42,9 @@ export class ProductService {
 
   addReview(productIdOrSlug: string | number, review: any): Observable<any> {
     return this.http.post<any>(`${this.endpoint}/${productIdOrSlug}/reviews`, review);
+  }
+
+  create(payload: CreateProductRequest): Observable<Product> {
+    return this.http.post<Product>(this.endpoint, payload);
   }
 }
