@@ -1,0 +1,35 @@
+<div class="admin-shell">
+  <aside class="sidebar">
+    <div class="brand-box">
+      <img [src]="brand.logoUrl" [alt]="brand.name" />
+      <div>
+        <strong>{{ brand.name }}</strong>
+        <small>Administración</small>
+      </div>
+    </div>
+
+    <nav class="menu">
+      <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+        Resumen
+      </a>
+      <a routerLink="/admin/upload" routerLinkActive="active">
+        Subir imágenes
+      </a>
+      <a routerLink="/">
+        Ver tienda pública ↗
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <strong>{{ auth.session()?.name }}</strong>
+        <small>{{ auth.session()?.email }}</small>
+      </div>
+      <button type="button" class="btn-logout" (click)="auth.logout()">Cerrar sesión</button>
+    </div>
+  </aside>
+
+  <main class="content">
+    <router-outlet />
+  </main>
+</div>

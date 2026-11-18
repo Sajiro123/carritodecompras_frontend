@@ -1,0 +1,36 @@
+<div class="upload-card" (dragover)="onDragOver($event)" (drop)="onDrop($event)">
+  <label class="dropzone">
+    <input
+      type="file"
+      accept="image/jpeg,image/png,image/webp,image/gif"
+      [disabled]="uploading()"
+      (change)="onFileSelected($event)"
+    />
+    <span class="title">{{ uploading() ? 'Subiendo a Supabase...' : label() }}</span>
+    <small>JPG, PNG, WEBP o GIF · Máximo 5 MB · Carpeta: <strong>{{ folder() }}/</strong></small>
+  </label>
+
+  @if (error()) {
+    <p class="err">{{ error() }}</p>
+  }
+
+  @if (previewUrl() || result()) {
+    <div class="preview-box">
+      <img [src]="result()?.publicUrl || previewUrl()" alt="Vista previa" />
+
+      @if (result(); as res) {
+        <div class="meta">
+          <code>{{ res.path }}</code>
+          <div class="actions">
+            <button type="button" class="btn-sec" (click)="copyUrl()">
+              {{ copied() ? 'URL copiada' : 'Copiar URL pública' }}
+            </button>
+            <button type="button" class="btn-del" [disabled]="uploading()" (click)="removeFile()">
+              Eliminar
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
