@@ -1,0 +1,24 @@
+<h1>Panel administrativo · {{ brand.name }}</h1>
+<p class="subtitle">
+  Negocio actual: <code>{{ brand.tenantCode }}</code> (configuración estática para demo, lista para conectar al SaaS Master).
+</p>
+
+<div class="cards">
+  <article class="card">
+    <h3>Imágenes (Supabase)</h3>
+    <p>Sube fotos de perfumes, categorías o banners al bucket <code>CarritoCompras</code>.</p>
+    <a class="btn" routerLink="/admin/upload">Ir a subir imágenes</a>
+  </article>
+
+  <article class="card">
+    <h3>Catálogo de Perfumes</h3>
+    <p>Siguiente módulo: crear/editar perfumes, familia olfativa y variantes (50ml, 100ml).</p>
+    <span class="tag">Próximo sprint</span>
+  </article>
+
+  <article class="card">
+    <h3>Pedidos</h3>
+    <p>Siguiente módulo: revisar compras, validar pagos BCP/Flow/Culqi y cambiar estados.</p>
+    <span class="tag">Próximo sprint</span>
+  </article>
+</div>

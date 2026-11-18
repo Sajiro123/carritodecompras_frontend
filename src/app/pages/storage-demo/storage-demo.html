@@ -1,0 +1,38 @@
+<div class="header">
+  <h1>Carga de imágenes (Supabase Storage)</h1>
+  <p>Bucket configurado: <code>CarritoCompras</code> · Máximo 5 MB · JPG, PNG, WEBP, GIF</p>
+</div>
+
+<div class="folder-picker">
+  <label for="folder">Carpeta destino:</label>
+  <select
+    id="folder"
+    [ngModel]="selectedFolder()"
+    (ngModelChange)="selectedFolder.set($event)"
+  >
+    @for (folder of folders; track folder) {
+      <option [value]="folder">{{ folder }}</option>
+    }
+  </select>
+</div>
+
+<app-image-upload
+  [folder]="selectedFolder()"
+  label="Haz clic o arrastra una imagen aquí"
+  (uploaded)="onUploaded($event)"
+  (removed)="onRemoved($event)"
+/>
+
+@if (history().length > 0) {
+  <section class="history">
+    <h2>Archivos subidos en esta sesión</h2>
+    <div class="grid">
+      @for (item of history(); track item.path) {
+        <article class="card">
+          <img [src]="item.publicUrl" [alt]="item.path" />
+          <code>{{ item.publicUrl }}</code>
+        </article>
+      }
+    </div>
+  </section>
+}

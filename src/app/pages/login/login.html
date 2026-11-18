@@ -1,0 +1,53 @@
+<div class="login-page">
+  <div class="login-card">
+    <div class="brand-header">
+      <img [src]="brand.logoUrl" [alt]="brand.name" />
+      <h1>{{ brand.name }}</h1>
+      <p>{{ brand.tagline }} · Acceso administrativo</p>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="form">
+      <label>
+        Correo electrónico
+        <input formControlName="email" type="email" placeholder="admin@perfumeria.com" autocomplete="username" />
+        @if (form.controls.email.touched && form.controls.email.invalid) {
+          <small class="err">Ingresa un correo válido</small>
+        }
+      </label>
+
+      <label>
+        Contraseña
+        <div class="password-wrap">
+          <input
+            formControlName="password"
+            [type]="showPassword() ? 'text' : 'password'"
+            placeholder="••••••••"
+            autocomplete="current-password"
+          />
+          <button type="button" class="toggle-btn" (click)="showPassword.set(!showPassword())">
+            {{ showPassword() ? 'Ocultar' : 'Ver' }}
+          </button>
+        </div>
+        @if (form.controls.password.touched && form.controls.password.invalid) {
+          <small class="err">Mínimo 6 caracteres</small>
+        }
+      </label>
+
+      @if (error()) {
+        <p class="err-box">{{ error() }}</p>
+      }
+
+      <button type="submit" class="btn-login">Ingresar al panel</button>
+    </form>
+
+    <div class="demo-hint">
+      <div>
+        <strong>Credenciales demo:</strong>
+        <code>admin@perfumeria.com</code> / <code>Demo2026!</code>
+      </div>
+      <button type="button" class="btn-fill" (click)="fillDemo()">Autocompletar</button>
+    </div>
+
+    <a class="back-link" routerLink="/">← Volver a la tienda pública</a>
+  </div>
+</div>
