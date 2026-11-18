@@ -1,4 +1,4 @@
-import { Component, OnDestroy, inject, input, output, signal } from '@angular/core';
+import { Component, OnDestroy, computed, inject, input, output, signal } from '@angular/core';
 import { StorageFolder, StorageService, UploadResponse } from '../../services/storage.service';
 
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -14,13 +14,18 @@ export class ImageUpload implements OnDestroy {
 
   readonly folder = input<StorageFolder>('productos');
   readonly label = input('Subir imagen');
+  readonly autoUpload = input(true);
+  readonly externalBusy = input(false);
 
   readonly uploaded = output<UploadResponse>();
   readonly removed = output<string>();
+  readonly fileChanged = output<File | null>();
 
   readonly uploading = signal(false);
+  readonly busy = computed(() => this.uploading() || this.externalBusy());
   readonly error = signal('');
   readonly previewUrl = signal('');
+  readonly selectedFileName = signal('');
   readonly result = signal<UploadResponse | null>(null);
   readonly copied = signal(false);
 
@@ -36,6 +41,7 @@ export class ImageUpload implements OnDestroy {
 
   onDrop(event: DragEvent): void {
     event.preventDefault();
+    if (this.busy()) return;
     const file = event.dataTransfer?.files?.[0];
     if (file) {
       this.handleFile(file);
@@ -46,9 +52,21 @@ export class ImageUpload implements OnDestroy {
     event.preventDefault();
   }
 
+  clearSelection(): void {
+    this.result.set(null);
+    this.error.set('');
+    this.selectedFileName.set('');
+    this.revokePreview();
+    this.previewUrl.set('');
+    this.fileChanged.emit(null);
+  }
+
   removeFile(): void {
     const current = this.result();
-    if (!current) return;
+    if (!current) {
+      this.clearSelection();
+      return;
+    }
 
     this.uploading.set(true);
     this.error.set('');
@@ -56,9 +74,11 @@ export class ImageUpload implements OnDestroy {
       next: () => {
         this.removed.emit(current.path);
         this.result.set(null);
+        this.selectedFileName.set('');
         this.revokePreview();
         this.previewUrl.set('');
         this.uploading.set(false);
+        this.fileChanged.emit(null);
       },
       error: (err) => {
         this.error.set(err.error?.message ?? 'No se pudo eliminar el archivo');
@@ -94,8 +114,15 @@ export class ImageUpload implements OnDestroy {
     this.revokePreview();
     this.objectUrlToRevoke = URL.createObjectURL(file);
     this.previewUrl.set(this.objectUrlToRevoke);
-    this.uploading.set(true);
+    this.selectedFileName.set(file.name);
+    this.result.set(null);
+    this.fileChanged.emit(file);
 
+    if (!this.autoUpload()) {
+      return;
+    }
+
+    this.uploading.set(true);
     this.storage.upload(file, this.folder()).subscribe({
       next: (res) => {
         this.result.set(res);

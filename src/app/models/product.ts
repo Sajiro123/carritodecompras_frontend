@@ -6,3 +6,11 @@ export interface Product {
   stock: number;
   imageUrl: string | null;
 }
+
+export interface CreateProductRequest {
+  name: string;
+  description: string | null;
+  price: number;
+  stock: number;
+  imageUrl: string;
+}
