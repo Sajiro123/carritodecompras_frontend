@@ -1,0 +1,388 @@
+<!-- ========================================================
+     1. HERO CAROUSEL DE ALTA PERFUMERÍA (FULL-WIDTH)
+     ======================================================== -->
+<section
+  class="hero-carousel"
+  (mouseenter)="setSliderPaused(true)"
+  (mouseleave)="setSliderPaused(false)"
+  aria-label="Destacados de Alta Perfumería"
+>
+  @for (slide of heroSlides; track slide.title; let i = $index) {
+    <div
+      class="hero-slide"
+      [class.hero-slide--active]="activeSlide() === i"
+      [style.backgroundImage]="'url(' + slide.imageUrl + ')'"
+    >
+      <div class="hero-slide__overlay"></div>
+      <div class="hero-slide__inner">
+        <div class="hero-slide__content">
+          <span class="hero-eyebrow">{{ slide.eyebrow }}</span>
+          <h1 class="hero-heading">{{ slide.title }}</h1>
+          <p class="hero-subtitle">{{ slide.subtitle }}</p>
+          <button
+            type="button"
+            class="hero-cta-gold"
+            (click)="goToCollection(slide.targetCollection)"
+          >
+            {{ slide.ctaLabel }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <button type="button" class="hero-arrow hero-arrow--left" (click)="prevSlide()" aria-label="Anterior">
+    ‹
+  </button>
+  <button type="button" class="hero-arrow hero-arrow--right" (click)="nextSlide()" aria-label="Siguiente">
+    ›
+  </button>
+
+  <div class="hero-dots" role="tablist" aria-label="Diapositivas">
+    @for (slide of heroSlides; track slide.title; let i = $index) {
+      <button
+        type="button"
+        class="hero-dot"
+        [class.hero-dot--active]="activeSlide() === i"
+        (click)="goToSlide(i)"
+        [attr.aria-label]="'Ir a diapositiva ' + (i + 1)"
+      ></button>
+    }
+  </div>
+</section>
+
+<!-- ========================================================
+     2. BARRA DE CONFIANZA & SERVICIO (4 PILARES)
+     ======================================================== -->
+<section class="trust-strip">
+  <div class="home-container trust-strip__grid">
+    <div class="trust-item">
+      <div class="trust-item__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          <path d="m9 12 2 2 4-4" />
+        </svg>
+      </div>
+      <div>
+        <strong>100% ORIGINALES</strong>
+        <span>Lotes verificados y garantizados</span>
+      </div>
+    </div>
+
+    <div class="trust-item">
+      <div class="trust-item__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+          <rect x="1" y="5" width="15" height="11" rx="1.5" />
+          <path d="M16 9h4l3 3v4h-7V9z" />
+          <circle cx="5.5" cy="18" r="2" />
+          <circle cx="18.5" cy="18" r="2" />
+        </svg>
+      </div>
+      <div>
+        <strong>ENVÍO EXPRESS PERÚ</strong>
+        <span>Entrega 24h asegurada Lima y provincias</span>
+      </div>
+    </div>
+
+    <div class="trust-item">
+      <div class="trust-item__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+          <path d="M9 3h6M10 3v5l-4.5 9.2A2 2 0 0 0 7.3 20h9.4a2 2 0 0 0 1.8-2.8L14 8V3" />
+          <path d="M8.5 14h7" />
+        </svg>
+      </div>
+      <div>
+        <strong>DECANTS CERTIFICADOS</strong>
+        <span>Frascos de vidrio oficial 5ml y 10ml</span>
+      </div>
+    </div>
+
+    <div class="trust-item">
+      <div class="trust-item__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        </svg>
+      </div>
+      <div>
+        <strong>ASESORÍA VIP WHATSAPP</strong>
+        <span>Atención por sommeliers online</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================================================
+     3. OPORTUNIDAD ÚNICA DE LOTE — PROMOCIÓN DESTACADA
+     ======================================================== -->
+<section class="deals-section">
+  <div class="home-container">
+    <div class="deals-header">
+      <div class="deals-header__copy">
+        <span class="section-eyebrow">✦ OPORTUNIDAD ÚNICA DE LOTE</span>
+        <h2 class="section-title">Alta Perfumería — Promoción Destacada</h2>
+        <p class="section-subtitle">
+          Frascos con descuento de importación y curaduría selecta de temporada. Stock limitado por lote registrado.
+        </p>
+      </div>
+
+      <div class="countdown-box" aria-label="Tiempo restante de promoción">
+        <span class="countdown-box__label">TERMINA EN:</span>
+        <div class="countdown-units">
+          <div class="countdown-unit">
+            <strong>{{ countdownHours() }}</strong>
+            <span>HORAS</span>
+          </div>
+          <div class="countdown-unit">
+            <strong>{{ countdownMinutes() }}</strong>
+            <span>MIN</span>
+          </div>
+          <div class="countdown-unit">
+            <strong>{{ countdownSeconds() }}</strong>
+            <span>SEG</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pestañas de filtro rápido -->
+    <div class="deal-tabs" role="tablist">
+      @for (tab of dealTabs; track tab.key) {
+        <button
+          type="button"
+          class="deal-tab"
+          [class.deal-tab--active]="activeDealTab() === tab.key"
+          (click)="selectDealTab(tab.key)"
+        >
+          {{ tab.label }}
+        </button>
+      }
+    </div>
+
+    <!-- Skeleton -->
+    @if (loading()) {
+      <div class="deals-grid">
+        @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+          <div class="deal-card deal-card--skeleton">
+            <div class="skel skel-img"></div>
+            <div class="skel skel-sm"></div>
+            <div class="skel skel-lg"></div>
+            <div class="skel skel-btn"></div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Grilla 6 tarjetas (3×2) -->
+    @if (!loading() && featuredProducts().length > 0) {
+      <div class="deals-grid">
+        @for (product of featuredProducts(); track product.id) {
+          <article class="deal-card" (click)="openProductInCatalog(product)">
+            <div class="deal-card__media">
+              @let badge = getDiscountBadge(product);
+              <span
+                class="deal-badge"
+                [class.deal-badge--red]="badge.tone === 'red'"
+                [class.deal-badge--gold]="badge.tone === 'gold'"
+                [class.deal-badge--dark]="badge.tone === 'dark'"
+              >
+                {{ badge.text }}
+              </span>
+
+              <span
+                class="conc-tag"
+                [class.conc-tag--gold]="product.concentration === 'Extrait'"
+              >
+                {{ getConcentrationLabel(product) }}
+              </span>
+
+              <div class="deal-card__img-wrap">
+                @if (product.imageUrl) {
+                  <img [src]="product.imageUrl" [alt]="product.name" loading="lazy" />
+                }
+              </div>
+            </div>
+
+            <div class="deal-card__body">
+              <span class="deal-brand">{{ product.brand || 'ALTA PERFUMERÍA' }}</span>
+              <h3 class="deal-name">{{ product.name }}</h3>
+
+              <div class="deal-notes">
+                @for (note of getShortNotes(product); track note; let last = $last) {
+                  <span>{{ note }}</span>
+                  @if (!last) {
+                    <span class="note-dot">·</span>
+                  }
+                }
+              </div>
+
+              <div class="deal-pricing-row">
+                <div class="deal-prices">
+                  @if (product.originalPrice && product.originalPrice > product.price) {
+                    <span class="deal-old-price">S/. {{ product.originalPrice | number: '1.2-2' }}</span>
+                  }
+                  <strong class="deal-current-price">S/. {{ product.price | number: '1.2-2' }}</strong>
+                </div>
+
+                @if (getSavingsAmount(product) > 0) {
+                  <span class="savings-pill">
+                    Ahorra S/. {{ getSavingsAmount(product) | number: '1.0-0' }}
+                  </span>
+                } @else {
+                  <span class="express-pill">Lima 24h</span>
+                }
+              </div>
+
+              <div class="deal-actions">
+                <button
+                  type="button"
+                  class="btn-deal-add"
+                  (click)="buyAndGoToCatalog(product, $event)"
+                  [disabled]="product.stock === 0"
+                >
+                  + AÑADIR
+                </button>
+                <button
+                  type="button"
+                  class="btn-deal-decant"
+                  (click)="buyDecantAndGoToCatalog(product, $event)"
+                >
+                  💧 DECANT 5ML
+                </button>
+              </div>
+            </div>
+          </article>
+        }
+      </div>
+
+      <div class="deals-footer-cta">
+        <button type="button" class="btn-explore-all" (click)="goToCollection('all')">
+          VER TODO EL CATÁLOGO DE FRAGANCIAS →
+        </button>
+      </div>
+    }
+  </div>
+</section>
+
+<!-- ========================================================
+     4. CURADURÍA EDITORIAL — UNIVERSOS OLFATIVOS
+     ======================================================== -->
+<section class="universes-section">
+  <div class="home-container">
+    <div class="universes-header">
+      <span class="section-eyebrow">CURADURÍA EDITORIAL</span>
+      <h2 class="section-title">Universos Olfativos</h2>
+      <p class="section-subtitle">
+        Explora perfiles aromáticos diseñados para proyectar elegancia e identidad magnética.
+      </p>
+    </div>
+
+    <div class="universes-grid">
+      <article
+        class="universe-card"
+        style="background-image: url('https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=1200&q=80')"
+        (click)="goToCollection('hombre')"
+      >
+        <div class="universe-card__overlay"></div>
+        <div class="universe-card__content">
+          <span class="universe-eyebrow">COLECCIÓN MASCULINA</span>
+          <h3>Maderas &amp; Extractos de Alta Fijación</h3>
+          <p>
+            Maderas ahumadas, acordes de cuero y especias. Casas de nicho como Creed, Parfums de Marly, Dior y Tom Ford.
+          </p>
+          <span class="universe-link">VER FRAGANCIAS MASCULINAS ›</span>
+        </div>
+      </article>
+
+      <article
+        class="universe-card"
+        style="background-image: url('https://images.unsplash.com/photo-1541643600914-78b084683601?w=1200&q=80')"
+        (click)="goToCollection('mujer')"
+      >
+        <div class="universe-card__overlay"></div>
+        <div class="universe-card__content">
+          <span class="universe-eyebrow">COLECCIÓN FEMENINA</span>
+          <h3>Flores Nobles, Ámbar &amp; Vainilla</h3>
+          <p>
+            Rosa de Damasco, azafrán luminoso, flor de azahar y vainillas envolventes de Maison Francis Kurkdjian, Byredo y YSL.
+          </p>
+          <span class="universe-link">EXPLORAR SELECCIÓN ›</span>
+        </div>
+      </article>
+    </div>
+
+    <!-- Banner Oscuro: Decants & Discovery Sets -->
+    <div class="decants-feature-card">
+      <div class="decants-feature-card__copy">
+        <span class="authentic-pill">✦ 100% AUTÉNTICO GARANTIZADO</span>
+        <h3>Decants &amp; Discovery Sets: Prueba Antes de Comprar</h3>
+        <p>
+          Decantamos directamente desde los frascos originales con instrumental de laboratorio esterilizado. Elige
+          atomizadores de lujo en 2ml, 5ml y 10ml para vivir la evolución en tu propia piel antes de invertir en la
+          botella completa.
+        </p>
+        <div class="decants-cta-row">
+          <button type="button" class="btn-gold-solid" (click)="goToCollection('decants')">
+            ARMAR SET PERSONALIZADO
+          </button>
+          <span class="decants-from-note">✦ Desde S/. 38 el decant</span>
+        </div>
+      </div>
+
+      <div class="decants-sizes-grid">
+        <button type="button" class="size-tile" (click)="goToCollection('decants')">
+          <span class="size-tile__icon">💧</span>
+          <strong>2 ml</strong>
+          <small>~30 Atomizaciones</small>
+          <span class="size-tile__tag">Para catar</span>
+        </button>
+
+        <button type="button" class="size-tile size-tile--featured" (click)="goToCollection('decants')">
+          <span class="size-tile__icon">💧</span>
+          <strong>5 ml</strong>
+          <small>~75 Atomizaciones</small>
+          <span class="size-tile__tag">Favorito</span>
+        </button>
+
+        <button type="button" class="size-tile" (click)="goToCollection('decants')">
+          <span class="size-tile__icon">💧</span>
+          <strong>10 ml</strong>
+          <small>~150 Atomizaciones</small>
+          <span class="size-tile__tag">Viaje / Lujo</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================================================
+     5. SERVICIO CONCIERGE OLFATIVO
+     ======================================================== -->
+<section class="concierge-section">
+  <div class="home-container">
+    <div class="concierge-card">
+      <div class="concierge-card__copy">
+        <span class="concierge-eyebrow">✦ SERVICIO CONCIERGE OLFATIVO</span>
+        <h3>¿Dudas sobre qué fragancia elegir? Consulta a nuestros Sommeliers</h3>
+        <p>
+          Dinos tus aromas preferidos, el clima o la ocasión de uso (boda, oficina, cita nocturna). Nuestro equipo de
+          perfumería te sugiere 3 opciones exactas para tu piel y estilo de vida.
+        </p>
+        <div class="sommeliers-online">
+          <div class="avatar-stack">
+            <span>JL</span>
+            <span>MR</span>
+            <span>AL</span>
+          </div>
+          <small>3 Sommeliers disponibles en este momento</small>
+        </div>
+      </div>
+
+      <div class="concierge-card__action">
+        <button type="button" class="btn-concierge-vip" (click)="openAdvisorInCatalog()">
+          ✦ INICIAR ASESORÍA VIP
+        </button>
+        <small>Respuesta guiada al instante · Sin costo</small>
+      </div>
+    </div>
+  </div>
+</section>

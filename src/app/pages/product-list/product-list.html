@@ -1,500 +1,695 @@
-<!-- Encabezado de la Colección -->
-<div class="collection-header">
-  <div class="collection-title-box">
-    <h1 class="collection-title">Catálogo Exclusivo</h1>
-    <div class="collection-meta">
-      <span class="collection-count">{{ totalElements }} productos disponibles</span>
-      @if (getActiveFiltersCount() > 0) {
-        <span class="active-badge">{{ getActiveFiltersCount() }} filtros activos</span>
+<!-- Contenedor Principal Centrado (Alta Perfumería) -->
+<div class="catalog-page">
+  <!-- Breadcrumb -->
+  <nav class="breadcrumb-bar" aria-label="Ruta de navegación">
+    @for (crumb of currentHero.breadcrumb; track crumb; let last = $last; let first = $first) {
+      @if (first) {
+        <button type="button" class="crumb-link" (click)="goHome()">{{ crumb }}</button>
+      } @else if (!last) {
+        <span class="crumb-sep">›</span>
+        <span class="crumb-mid">{{ crumb }}</span>
+      } @else {
+        <span class="crumb-sep">›</span>
+        <span class="crumb-current">{{ crumb }}</span>
       }
+    }
+  </nav>
+
+  <!-- Hero Editorial de Colección + Sello de Autenticidad -->
+  <section class="editorial-hero">
+    <div class="editorial-hero__copy">
+      <div class="hero-badges">
+        <span class="badge-curadoria">CURADURÍA EXCLUSIVA</span>
+        <span class="badge-availability">{{ totalElements }} Fragancias disponibles</span>
+      </div>
+      <h1 class="hero-title">{{ currentHero.title }}</h1>
+      <p class="hero-description">{{ currentHero.description }}</p>
+    </div>
+
+    <div class="trust-card">
+      <div class="trust-card__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          <path d="m9 12 2 2 4-4" />
+        </svg>
+      </div>
+      <div class="trust-card__text">
+        <strong>100% Originales</strong>
+        <span>Lotes verificados en Lima</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Barra de Filtros Activos + Ordenamiento + Densidad -->
+  <div class="toolbar-row">
+    <div class="toolbar-chips">
+      <span class="toolbar-label">FILTROS:</span>
+
+      @if (getActiveFiltersCount() === 0) {
+        <span class="toolbar-empty-hint">Colección completa</span>
+      }
+
+      @if (q) {
+        <span class="active-chip">
+          “{{ q }}”
+          <button type="button" (click)="clearSearch()" aria-label="Quitar búsqueda">×</button>
+        </span>
+      }
+      @if (selectedGender) {
+        <span class="active-chip">
+          {{ selectedGender }}
+          <button type="button" (click)="clearGender()" aria-label="Quitar género">×</button>
+        </span>
+      }
+      @if (onlyNiche) {
+        <span class="active-chip">
+          Perfumería Nicho
+          <button type="button" (click)="clearNiche()" aria-label="Quitar nicho">×</button>
+        </span>
+      }
+      @if (onlyFavorites) {
+        <span class="active-chip">
+          Favoritos
+          <button type="button" (click)="clearFavoritesFilter()" aria-label="Quitar favoritos">×</button>
+        </span>
+      }
+      @for (fam of selectedFamilias; track fam) {
+        <span class="active-chip">
+          {{ fam }}
+          <button type="button" (click)="toggleItem(selectedFamilias, fam)" aria-label="Quitar familia">×</button>
+        </span>
+      }
+      @for (conc of selectedConcentraciones; track conc) {
+        <span class="active-chip">
+          {{ conc }}
+          <button type="button" (click)="toggleItem(selectedConcentraciones, conc)" aria-label="Quitar concentración">×</button>
+        </span>
+      }
+      @for (occ of selectedOcasiones; track occ) {
+        <span class="active-chip">
+          {{ occ }}
+          <button type="button" (click)="toggleItem(selectedOcasiones, occ)" aria-label="Quitar ocasión">×</button>
+        </span>
+      }
+      @for (fmt of selectedFormatos; track fmt) {
+        <span class="active-chip">
+          {{ fmt }}
+          <button type="button" (click)="toggleItem(selectedFormatos, fmt)" aria-label="Quitar formato">×</button>
+        </span>
+      }
+      @for (brand of selectedMarcas; track brand) {
+        <span class="active-chip">
+          {{ brand }}
+          <button type="button" (click)="toggleItem(selectedMarcas, brand)" aria-label="Quitar marca">×</button>
+        </span>
+      }
+      @if (minPrecio != null || maxPrecio != null) {
+        <span class="active-chip">
+          S/. {{ minPrecio || 0 }} – S/. {{ maxPrecio || dbMaxPrice }}
+          <button type="button" (click)="clearPrice()" aria-label="Quitar rango de precio">×</button>
+        </span>
+      }
+      @if (soloDescuento) {
+        <span class="active-chip">
+          Con Descuento
+          <button type="button" (click)="toggleSoloDescuento()" aria-label="Quitar descuento">×</button>
+        </span>
+      }
+      @if (entrega24h) {
+        <span class="active-chip">
+          Entrega 24h Lima
+          <button type="button" (click)="toggleEntrega24h()" aria-label="Quitar entrega 24h">×</button>
+        </span>
+      }
+
+      @if (getActiveFiltersCount() > 0) {
+        <button type="button" class="btn-clear-inline" (click)="resetFilters()">Limpiar todo</button>
+      }
+    </div>
+
+    <div class="toolbar-controls">
+      <button type="button" class="btn-mobile-filters" (click)="toggleMobileDrawer()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M3 6h18M6 12h12M10 18h4" stroke-linecap="round" />
+        </svg>
+        <span>Filtros</span>
+        @if (getActiveFiltersCount() > 0) {
+          <span class="mobile-count">{{ getActiveFiltersCount() }}</span>
+        }
+      </button>
+
+      <div class="sort-control">
+        <label for="perfumeSort">ORDENAR:</label>
+        <select id="perfumeSort" [(ngModel)]="sort" (change)="applyFilters(0)">
+          <option value="bestsellers">Más Vendidos</option>
+          <option value="newest">Novedades</option>
+          <option value="price,asc">Precio: menor a mayor</option>
+          <option value="price,desc">Precio: mayor a menor</option>
+          <option value="rating,desc">Mejor Calificados</option>
+          <option value="name,asc">Nombre: A – Z</option>
+        </select>
+      </div>
+
+      <div class="view-toggle" aria-label="Densidad de cuadrícula">
+        <button
+          type="button"
+          class="view-btn"
+          [class.view-btn--active]="gridDensity === 'normal'"
+          (click)="gridDensity = 'normal'"
+          title="Vista Editorial (3 columnas)"
+        >
+          <svg viewBox="0 0 18 18" fill="currentColor">
+            <rect x="1" y="1" width="6.5" height="6.5" rx="1" />
+            <rect x="10.5" y="1" width="6.5" height="6.5" rx="1" />
+            <rect x="1" y="10.5" width="6.5" height="6.5" rx="1" />
+            <rect x="10.5" y="10.5" width="6.5" height="6.5" rx="1" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          class="view-btn"
+          [class.view-btn--active]="gridDensity === 'compact'"
+          (click)="gridDensity = 'compact'"
+          title="Vista Compacta (4 columnas)"
+        >
+          <svg viewBox="0 0 18 18" fill="currentColor">
+            <rect x="1" y="1" width="4" height="4" rx="0.8" />
+            <rect x="7" y="1" width="4" height="4" rx="0.8" />
+            <rect x="13" y="1" width="4" height="4" rx="0.8" />
+            <rect x="1" y="7" width="4" height="4" rx="0.8" />
+            <rect x="7" y="7" width="4" height="4" rx="0.8" />
+            <rect x="13" y="7" width="4" height="4" rx="0.8" />
+            <rect x="1" y="13" width="4" height="4" rx="0.8" />
+            <rect x="7" y="13" width="4" height="4" rx="0.8" />
+            <rect x="13" y="13" width="4" height="4" rx="0.8" />
+          </svg>
+        </button>
+      </div>
     </div>
   </div>
 
-  <div class="collection-controls">
-    <!-- Botón para abrir filtros en móviles -->
-    <button type="button" class="btn-mobile-filters" (click)="toggleMobileDrawer()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <line x1="4" y1="21" x2="4" y2="14"/>
-        <line x1="4" y1="10" x2="4" y2="3"/>
-        <line x1="12" y1="21" x2="12" y2="12"/>
-        <line x1="12" y1="8" x2="12" y2="3"/>
-        <line x1="20" y1="21" x2="20" y2="16"/>
-        <line x1="20" y1="12" x2="20" y2="3"/>
-        <line x1="1" y1="14" x2="7" y2="14"/>
-        <line x1="9" y1="8" x2="15" y2="8"/>
-        <line x1="17" y1="16" x2="23" y2="16"/>
-      </svg>
-      <span>Filtros</span>
-      @if (getActiveFiltersCount() > 0) {
-        <span class="mobile-filter-count">{{ getActiveFiltersCount() }}</span>
+  <!-- Toast flotante -->
+  @if (addedMessage()) {
+    <div class="toast-floating">
+      <span class="toast-check">✓</span>
+      <span>{{ addedMessage() }}</span>
+    </div>
+  }
+
+  <!-- Layout Centrado: Sidebar de Filtros Detallados + Grilla de Fragancias -->
+  <div class="shop-layout">
+    @if (isMobileFilterOpen) {
+      <div class="drawer-backdrop" (click)="toggleMobileDrawer()"></div>
+    }
+
+    <!-- SIDEBAR: FILTROS DETALLADOS DE PERFUMERÍA -->
+    <aside class="filters-sidebar" [class.filters-sidebar--open]="isMobileFilterOpen" aria-label="Filtros detallados">
+      <div class="sidebar-top">
+        <div class="sidebar-top__title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M4 6h16M7 12h10M10 18h4" stroke-linecap="round" />
+          </svg>
+          <div>
+            <h3>FILTROS<br />DETALLADOS</h3>
+          </div>
+        </div>
+        <div class="sidebar-top__right">
+          @if (getActiveFiltersCount() > 0) {
+            <span class="active-counter">{{ getActiveFiltersCount() }}<br />ACTIVOS</span>
+          }
+          <button type="button" class="btn-close-mobile" (click)="toggleMobileDrawer()" aria-label="Cerrar filtros">×</button>
+        </div>
+      </div>
+
+      <!-- 1. RANGO DE PRECIO (S/.) -->
+      <div class="filter-block">
+        <button type="button" class="block-header" (click)="toggleSection('precio')">
+          <span>RANGO DE PRECIO (S/.)</span>
+          <span class="block-caret" [class.block-caret--open]="sectionsOpen['precio']">▾</span>
+        </button>
+
+        @if (sectionsOpen['precio']) {
+          <div class="block-body">
+            <div class="slider-wrap">
+              <input
+                type="range"
+                class="price-range-slider"
+                [min]="0"
+                [max]="dbMaxPrice"
+                [step]="20"
+                [ngModel]="priceSliderValue"
+                (ngModelChange)="onPriceSliderChange($event)"
+                [style.--fill-pct]="getSliderPercent() + '%'"
+              />
+            </div>
+
+            <div class="price-input-row">
+              <div class="price-box">
+                <span>S/.</span>
+                <input
+                  type="number"
+                  [(ngModel)]="minPrecio"
+                  (change)="onPriceInputsApply()"
+                  (keyup.enter)="onPriceInputsApply()"
+                  placeholder="0"
+                  min="0"
+                />
+              </div>
+              <span class="price-dash">—</span>
+              <div class="price-box">
+                <span>S/.</span>
+                <input
+                  type="number"
+                  [(ngModel)]="maxPrecio"
+                  (change)="onPriceInputsApply()"
+                  (keyup.enter)="onPriceInputsApply()"
+                  [placeholder]="dbMaxPrice.toString()"
+                  min="0"
+                />
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- 2. FAMILIA OLFATIVA -->
+      <div class="filter-block">
+        <button type="button" class="block-header" (click)="toggleSection('familia')">
+          <span>FAMILIA OLFATIVA</span>
+          <span class="block-caret" [class.block-caret--open]="sectionsOpen['familia']">▾</span>
+        </button>
+
+        @if (sectionsOpen['familia']) {
+          <div class="block-body">
+            @for (fam of availableFamilias(); track fam.label) {
+              <label class="lux-checkbox">
+                <input
+                  type="checkbox"
+                  [checked]="selectedFamilias.includes(fam.label)"
+                  (change)="toggleItem(selectedFamilias, fam.label)"
+                />
+                <span class="lux-box"></span>
+                <span class="lux-label">{{ fam.label }}</span>
+                <span class="lux-count">({{ fam.count }})</span>
+              </label>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- 3. CONCENTRACIÓN -->
+      <div class="filter-block">
+        <button type="button" class="block-header" (click)="toggleSection('concentracion')">
+          <span>CONCENTRACIÓN</span>
+          <span class="block-caret" [class.block-caret--open]="sectionsOpen['concentracion']">▾</span>
+        </button>
+
+        @if (sectionsOpen['concentracion']) {
+          <div class="block-body">
+            <div class="concentration-grid">
+              @for (conc of availableConcentraciones(); track conc) {
+                <button
+                  type="button"
+                  class="conc-btn"
+                  [class.conc-btn--active]="selectedConcentraciones.includes(conc)"
+                  (click)="toggleItem(selectedConcentraciones, conc)"
+                >
+                  {{ conc }}
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- 4. OCASIÓN -->
+      <div class="filter-block">
+        <button type="button" class="block-header" (click)="toggleSection('ocasion')">
+          <span>OCASIÓN</span>
+          <span class="block-caret" [class.block-caret--open]="sectionsOpen['ocasion']">▾</span>
+        </button>
+
+        @if (sectionsOpen['ocasion']) {
+          <div class="block-body">
+            @for (occ of availableOcasiones(); track occ) {
+              <label class="lux-checkbox">
+                <input
+                  type="checkbox"
+                  [checked]="selectedOcasiones.includes(occ)"
+                  (change)="toggleItem(selectedOcasiones, occ)"
+                />
+                <span class="lux-box"></span>
+                <span class="lux-label">{{ occ }}</span>
+              </label>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- 5. FORMATO & TAMAÑO -->
+      <div class="filter-block">
+        <button type="button" class="block-header" (click)="toggleSection('formato')">
+          <span>FORMATO &amp; TAMAÑO</span>
+          <span class="block-caret" [class.block-caret--open]="sectionsOpen['formato']">▾</span>
+        </button>
+
+        @if (sectionsOpen['formato']) {
+          <div class="block-body">
+            @for (fmt of availableFormatos(); track fmt) {
+              <label class="lux-checkbox">
+                <input
+                  type="checkbox"
+                  [checked]="selectedFormatos.includes(fmt)"
+                  (change)="toggleItem(selectedFormatos, fmt)"
+                />
+                <span class="lux-box"></span>
+                <span class="lux-label">{{ fmt }}</span>
+              </label>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- 6. MARCAS DESTACADAS -->
+      <div class="filter-block">
+        <button type="button" class="block-header" (click)="toggleSection('marcas')">
+          <span>MARCAS DESTACADAS</span>
+          <span class="block-caret" [class.block-caret--open]="sectionsOpen['marcas']">▾</span>
+        </button>
+
+        @if (sectionsOpen['marcas']) {
+          <div class="block-body">
+            @for (brand of availableMarcas(); track brand.label) {
+              <label class="lux-checkbox">
+                <input
+                  type="checkbox"
+                  [checked]="selectedMarcas.includes(brand.label)"
+                  (change)="toggleItem(selectedMarcas, brand.label)"
+                />
+                <span class="lux-box"></span>
+                <span class="lux-label">{{ brand.label }}</span>
+                <span class="lux-count">{{ brand.count }}</span>
+              </label>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- 7. PREFERENCIAS RÁPIDAS -->
+      <div class="filter-block filter-block--extras">
+        <label class="lux-checkbox">
+          <input type="checkbox" [checked]="soloDescuento" (change)="toggleSoloDescuento()" />
+          <span class="lux-box"></span>
+          <span class="lux-label">Solo con Descuento</span>
+        </label>
+        <label class="lux-checkbox">
+          <input type="checkbox" [checked]="entrega24h" (change)="toggleEntrega24h()" />
+          <span class="lux-box"></span>
+          <span class="lux-label">En Stock Lima Entrega 24h</span>
+        </label>
+      </div>
+
+      <!-- Pie móvil -->
+      <div class="mobile-sidebar-footer">
+        <button type="button" class="btn-apply-mobile" (click)="toggleMobileDrawer()">
+          Ver {{ totalElements }} fragancias
+        </button>
+      </div>
+    </aside>
+
+    <!-- COLUMNA DERECHA: GRILLA DE FRAGANCIAS + PAGINACIÓN + BANNER ASESOR -->
+    <section class="catalog-content">
+      <!-- Skeleton de Carga -->
+      @if (loading()) {
+        <div class="perfume-grid" [class.perfume-grid--compact]="gridDensity === 'compact'">
+          @for (item of [1, 2, 3, 4, 5, 6]; track item) {
+            <div class="perfume-card skeleton-card">
+              <div class="skeleton skeleton-media"></div>
+              <div class="skeleton skeleton-line-sm"></div>
+              <div class="skeleton skeleton-line-lg"></div>
+              <div class="skeleton skeleton-line-md"></div>
+              <div class="skeleton skeleton-btns"></div>
+            </div>
+          }
+        </div>
       }
-    </button>
 
-    <!-- Selector de Densidad de Cuadrícula (Escritorio) -->
-    <div class="density-toggle">
-      <button
-        type="button"
-        class="density-btn"
-        [class.density-btn--active]="gridDensity === 'normal'"
-        (click)="gridDensity = 'normal'"
-        title="Vista estándar (3 columnas)"
-      >
-        <span class="grid-icon">▦</span>
-      </button>
-      <button
-        type="button"
-        class="density-btn"
-        [class.density-btn--active]="gridDensity === 'compact'"
-        (click)="gridDensity = 'compact'"
-        title="Vista compacta (4 columnas)"
-      >
-        <span class="grid-icon">▤</span>
-      </button>
-    </div>
+      <!-- Error -->
+      @if (error()) {
+        <div class="error-banner">{{ error() }}</div>
+      }
 
-    <!-- Selector de Ordenamiento -->
-    <div class="collection-sort">
-      <label for="sortSelect">Ordenar:</label>
-      <select id="sortSelect" class="sort-dropdown" [(ngModel)]="sort" (change)="applyFilters(0)">
-        <option value="">Destacados</option>
-        <option value="newest">Novedades / Recientes</option>
-        <option value="price,asc">Precio: menor a mayor</option>
-        <option value="price,desc">Precio: mayor a menor</option>
-        <option value="name,asc">Nombre: A – Z</option>
-        <option value="name,desc">Nombre: Z – A</option>
-      </select>
-    </div>
+      <!-- Estado Vacío -->
+      @if (!loading() && !error() && products().length === 0) {
+        <div class="empty-catalog">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+            <circle cx="11" cy="11" r="7.5" />
+            <path d="m20 20-3.8-3.8" stroke-linecap="round" />
+          </svg>
+          <h3>No encontramos fragancias con esa combinación</h3>
+          <p>Prueba ampliando el rango de precio o desactivando algún filtro olfativo.</p>
+          <button type="button" class="btn-obsidian" (click)="resetFilters()">Explorar toda la colección</button>
+        </div>
+      }
+
+      <!-- Grilla de Fragancias -->
+      @if (!loading() && products().length > 0) {
+        <div class="perfume-grid" [class.perfume-grid--compact]="gridDensity === 'compact'">
+          @for (product of products(); track product.id) {
+            <article class="perfume-card" (click)="openDetail(product)">
+              <!-- Zona de Imagen + Badge + Favorito -->
+              <div class="perfume-card__media">
+                @if (product.badge) {
+                  <span
+                    class="perfume-badge"
+                    [class.perfume-badge--dark]="product.badgeTone === 'dark'"
+                    [class.perfume-badge--gold]="product.badgeTone === 'gold'"
+                    [class.perfume-badge--red]="product.badgeTone === 'red'"
+                    [class.perfume-badge--soft]="product.badgeTone === 'soft' || !product.badgeTone"
+                  >
+                    {{ product.badge }}
+                  </span>
+                }
+
+                <button
+                  type="button"
+                  class="wishlist-btn"
+                  [class.wishlist-btn--active]="catalogFilter.isWishlisted(product.id)"
+                  (click)="toggleFavorite(product.id, $event)"
+                  aria-label="Guardar en favoritos"
+                  title="Guardar en favoritos"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    [attr.fill]="catalogFilter.isWishlisted(product.id) ? 'currentColor' : 'none'"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                  >
+                    <path
+                      d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+                    />
+                  </svg>
+                </button>
+
+                <div class="perfume-card__img-wrap">
+                  @if (product.imageUrl) {
+                    <img [src]="product.imageUrl" [alt]="product.name" loading="lazy" />
+                  }
+                </div>
+              </div>
+
+              <!-- Cuerpo de Tarjeta -->
+              <div class="perfume-card__body">
+                <div class="perfume-meta-row">
+                  <span class="perfume-brand">{{ product.brand || product.categoryName || 'ALTA PERFUMERÍA' }}</span>
+                  <span class="perfume-volume">{{ product.volumeLabel || '100 ML EDP' }}</span>
+                </div>
+
+                <h3 class="perfume-name">{{ product.name }}</h3>
+
+                @if (product.notes) {
+                  <p class="perfume-notes">Notas: {{ product.notes }}</p>
+                }
+
+                <div class="perfume-rating">
+                  <span class="stars">★★★★★</span>
+                  <span class="rating-meta">
+                    {{ (product.rating || 4.9) | number: '1.1-1' }} ({{ product.reviewsCount || 48 }})
+                  </span>
+                </div>
+
+                <div class="perfume-price-row">
+                  <strong class="price-main">S/. {{ product.price | number: '1.0-0' }}</strong>
+                  @if (product.originalPrice && product.originalPrice > product.price) {
+                    <span class="price-old">S/. {{ product.originalPrice | number: '1.0-0' }}</span>
+                  }
+                </div>
+
+                <div class="perfume-actions">
+                  <button
+                    type="button"
+                    class="btn-buy"
+                    (click)="addToCart(product, $event)"
+                    [disabled]="product.stock === 0"
+                  >
+                    {{ product.stock === 0 ? 'AGOTADO' : 'COMPRAR' }}
+                  </button>
+                  <button
+                    type="button"
+                    class="btn-sample"
+                    (click)="addSampleToCart(product, $event)"
+                    [title]="'Agregar decant oficial 5ml por S/. ' + (product.samplePrice || 55)"
+                  >
+                    MUESTRA 5ML
+                  </button>
+                </div>
+              </div>
+            </article>
+          }
+        </div>
+
+        <!-- Pie de Paginación -->
+        <div class="pagination-bar">
+          <span class="pagination-summary">{{ getDisplayRangeText() }}</span>
+
+          @if (totalPages > 1) {
+            <nav class="pagination-controls" aria-label="Paginación">
+              <button
+                type="button"
+                class="page-square"
+                [disabled]="page === 0"
+                (click)="applyFilters(page - 1)"
+                aria-label="Página anterior"
+              >
+                ‹
+              </button>
+
+              @for (p of getPageNumbers(); track p) {
+                <button
+                  type="button"
+                  class="page-square"
+                  [class.page-square--active]="page === p"
+                  (click)="applyFilters(p)"
+                >
+                  {{ p + 1 }}
+                </button>
+              }
+
+              <button
+                type="button"
+                class="page-square"
+                [disabled]="page >= totalPages - 1"
+                (click)="applyFilters(page + 1)"
+                aria-label="Página siguiente"
+              >
+                ›
+              </button>
+            </nav>
+          }
+        </div>
+      }
+
+      <!-- Banner Oscuro: Experiencia Guiada / Asesor Olfativo -->
+      <div class="guided-banner">
+        <div class="guided-banner__content">
+          <span class="guided-eyebrow">✦ EXPERIENCIA GUIADA AROMA ATELIER</span>
+          <h2>¿No estás seguro de cuál elegir para tu próxima gala?</h2>
+          <p>
+            Nuestro Asesor Olfativo analiza tus notas favoritas, ocasión y concentración preferida para recomendarte
+            las fragancias ideales. O descubre nuestros Discovery Sets de 5 muestras oficiales.
+          </p>
+        </div>
+
+        <div class="guided-banner__actions">
+          <button type="button" class="btn-gold-cta" (click)="openAdvisor()">
+            INICIAR ASESOR OLFATIVO
+          </button>
+          <button type="button" class="btn-outline-dark" (click)="goToDiscoverySets()">
+            VER DISCOVERY SETS
+          </button>
+        </div>
+      </div>
+    </section>
   </div>
 </div>
 
-<!-- Toast flotante cuando se agrega al carrito -->
-@if (addedMessage()) {
-  <div class="toast-floating">
-    <span class="toast-check">✓</span>
-    <span>{{ addedMessage() }}</span>
+<!-- MODAL ASESOR OLFATIVO INTERACTIVO -->
+@if (isAdvisorOpen()) {
+  <div class="modal-backdrop" (click)="closeAdvisor()">
+    <div class="advisor-modal" (click)="$event.stopPropagation()">
+      <button type="button" class="modal-close" (click)="closeAdvisor()" aria-label="Cerrar asesor">×</button>
+      <span class="advisor-eyebrow">ASESORÍA PERSONALIZADA</span>
+      <h2 class="advisor-title">Encuentra tu Firma Olfativa</h2>
+      <p class="advisor-subtitle">Selecciona tus preferencias y filtraremos el catálogo ideal para ti.</p>
+
+      <div class="advisor-field">
+        <label>1. ¿Para qué ocasión buscas la fragancia?</label>
+        <div class="advisor-pills">
+          @for (occ of availableOcasiones(); track occ) {
+            <button
+              type="button"
+              [class.active]="advisorOccasion === occ"
+              (click)="advisorOccasion = occ"
+            >
+              {{ occ }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="advisor-field">
+        <label>2. ¿Qué familia olfativa te atrae más?</label>
+        <div class="advisor-pills">
+          @for (fam of availableFamilias(); track fam.label) {
+            <button
+              type="button"
+              [class.active]="advisorFamily === fam.label"
+              (click)="advisorFamily = fam.label"
+            >
+              {{ fam.label }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="advisor-field">
+        <label>3. Concentración preferida</label>
+        <div class="advisor-pills">
+          @for (c of ['Cualquiera', 'EDP', 'Extrait', 'EDT', 'Elixir']; track c) {
+            <button
+              type="button"
+              [class.active]="advisorConcentration === c"
+              (click)="advisorConcentration = c"
+            >
+              {{ c }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <button type="button" class="btn-obsidian btn-obsidian--full" (click)="applyAdvisorRecommendation()">
+        VER MIS RECOMENDACIONES
+      </button>
+    </div>
   </div>
 }
 
-<!-- Layout Principal: Sidebar Izquierdo + Grid de Productos -->
-<div class="shop-layout">
-  <!-- Backdrop para Drawer Móvil -->
-  @if (isMobileFilterOpen) {
-    <div class="drawer-backdrop" (click)="toggleMobileDrawer()"></div>
-  }
-
-  <!-- Sidebar de Filtros (Estilo Nietux / Shopify Ultra Moderno) -->
-  <aside class="filters-sidebar" [class.filters-sidebar--open]="isMobileFilterOpen" aria-label="Filtros">
-    <div class="filters-header">
-      <div class="filters-title-wrap">
-        <h3>Filtros</h3>
-        @if (getActiveFiltersCount() > 0) {
-          <span class="pill-count">{{ getActiveFiltersCount() }}</span>
-        }
-      </div>
-
-      <div class="filters-header-actions">
-        @if (getActiveFiltersCount() > 0) {
-          <button class="btn-clear-text" (click)="resetFilters()">Limpiar todo</button>
-        }
-        <button class="btn-close-drawer" (click)="toggleMobileDrawer()" aria-label="Cerrar filtros">×</button>
-      </div>
-    </div>
-
-    <!-- 1. Buscador con Búsqueda Reactiva Instantánea (Debounced) -->
-    <div class="filter-section search-section">
-      <div class="search-input-wrapper">
-        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="8"/>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
-        <input
-          type="text"
-          [(ngModel)]="q"
-          (ngModelChange)="onSearchChange()"
-          placeholder="Buscar polo, casaca, reloj..."
-        />
-        @if (q) {
-          <button class="search-clear-btn" (click)="q = ''; applyFilters(0)">×</button>
-        }
-      </div>
-    </div>
-
-    <!-- 2. Acordeón: Categorías (Multi-selección) -->
-    <div class="filter-accordion">
-      <button class="accordion-header" (click)="toggleSection('categorias')">
-        <span class="accordion-title">
-          Categorías
-          @if (selectedCategories.length > 0) {
-            <span class="badge-mini">{{ selectedCategories.length }}</span>
-          }
-        </span>
-        <span class="chevron" [class.chevron--open]="sectionsOpen['categorias']">▾</span>
-      </button>
-
-      @if (sectionsOpen['categorias']) {
-        <div class="accordion-body">
-          @for (c of categories(); track c.id) {
-            <label class="checkbox-label" (click)="toggleCategory(c.slug)">
-              <input type="checkbox" [checked]="isCategorySelected(c.slug)" readonly />
-              <span class="custom-checkbox"></span>
-              <span class="option-text">{{ c.name }}</span>
-              <span class="option-count">({{ c.activeProductsCount }})</span>
-            </label>
-          }
-        </div>
-      }
-    </div>
-
-    <!-- 3. Acordeón: Tallas (Píldoras Multi-selección) -->
-    <div class="filter-accordion">
-      <button class="accordion-header" (click)="toggleSection('tallas')">
-        <span class="accordion-title">
-          Talla
-          @if (selectedTallas.length > 0) {
-            <span class="badge-mini">{{ selectedTallas.length }}</span>
-          }
-        </span>
-        <span class="chevron" [class.chevron--open]="sectionsOpen['tallas']">▾</span>
-      </button>
-
-      @if (sectionsOpen['tallas']) {
-        <div class="accordion-body">
-          <div class="tag-grid">
-            @for (size of availableTallas(); track size) {
-              <button
-                type="button"
-                class="size-pill"
-                [class.size-pill--active]="isTallaSelected(size)"
-                (click)="toggleTalla(size)"
-              >
-                {{ size }}
-              </button>
-            }
-          </div>
-        </div>
-      }
-    </div>
-
-    <!-- 4. Acordeón: Colores (Swatches Visuales con Círculos de Color) -->
-    <div class="filter-accordion">
-      <button class="accordion-header" (click)="toggleSection('colores')">
-        <span class="accordion-title">
-          Color
-          @if (selectedColors.length > 0) {
-            <span class="badge-mini">{{ selectedColors.length }}</span>
-          }
-        </span>
-        <span class="chevron" [class.chevron--open]="sectionsOpen['colores']">▾</span>
-      </button>
-
-      @if (sectionsOpen['colores']) {
-        <div class="accordion-body">
-          <div class="swatches-grid">
-            @for (c of availableColores(); track c) {
-              <button
-                type="button"
-                class="swatch-btn"
-                [class.swatch-btn--active]="isColorSelected(c)"
-                (click)="toggleColor(c)"
-                [title]="c"
-              >
-                <span
-                  class="swatch-dot"
-                  [style.background-color]="getColorHex(c)"
-                  [class.swatch-dot--white]="c.toLowerCase() === 'blanco'"
-                >
-                  @if (isColorSelected(c)) {
-                    <span class="swatch-check" [style.color]="c.toLowerCase() === 'blanco' ? '#18181b' : '#ffffff'">✓</span>
-                  }
-                </span>
-                <span class="swatch-label">{{ c }}</span>
-              </button>
-            }
-          </div>
-        </div>
-      }
-    </div>
-
-    <!-- 5. Acordeón: Precio (Campos Numéricos + Presets Rápidos) -->
-    <div class="filter-accordion">
-      <button class="accordion-header" (click)="toggleSection('precio')">
-        <span class="accordion-title">
-          Precio
-          @if (minPrecio != null || maxPrecio != null) {
-            <span class="badge-mini">Activo</span>
-          }
-        </span>
-        <span class="chevron" [class.chevron--open]="sectionsOpen['precio']">▾</span>
-      </button>
-
-      @if (sectionsOpen['precio']) {
-        <div class="accordion-body">
-          <!-- Presets rápidos -->
-          <div class="price-presets">
-            <button
-              type="button"
-              class="preset-chip"
-              [class.preset-chip--active]="isPricePresetActive(null, 50)"
-              (click)="setPricePreset(null, 50)"
-            >
-              Hasta S/ 50
-            </button>
-            <button
-              type="button"
-              class="preset-chip"
-              [class.preset-chip--active]="isPricePresetActive(50, 100)"
-              (click)="setPricePreset(50, 100)"
-            >
-              S/ 50 - 100
-            </button>
-            <button
-              type="button"
-              class="preset-chip"
-              [class.preset-chip--active]="isPricePresetActive(100, 200)"
-              (click)="setPricePreset(100, 200)"
-            >
-              S/ 100 - 200
-            </button>
-            <button
-              type="button"
-              class="preset-chip"
-              [class.preset-chip--active]="isPricePresetActive(200, null)"
-              (click)="setPricePreset(200, null)"
-            >
-              Más de S/ 200
-            </button>
-          </div>
-
-          <div class="price-inputs">
-            <div class="price-field">
-              <span class="price-currency">S/</span>
-              <input
-                type="number"
-                [(ngModel)]="minPrecio"
-                (keyup.enter)="applyFilters(0)"
-                placeholder="Mín"
-                min="0"
-              />
-            </div>
-            <span class="price-sep">–</span>
-            <div class="price-field">
-              <span class="price-currency">S/</span>
-              <input
-                type="number"
-                [(ngModel)]="maxPrecio"
-                (keyup.enter)="applyFilters(0)"
-                placeholder="Máx"
-                min="0"
-              />
-            </div>
-          </div>
-          <button class="btn-apply-price" (click)="applyFilters(0)">Aplicar rango</button>
-        </div>
-      }
-    </div>
-
-    <!-- 6. Acordeón: Disponibilidad -->
-    <div class="filter-accordion">
-      <button class="accordion-header" (click)="toggleSection('disponibilidad')">
-        <span class="accordion-title">
-          Disponibilidad
-          @if (disponible !== null) {
-            <span class="badge-mini">1</span>
-          }
-        </span>
-        <span class="chevron" [class.chevron--open]="sectionsOpen['disponibilidad']">▾</span>
-      </button>
-
-      @if (sectionsOpen['disponibilidad']) {
-        <div class="accordion-body">
-          <label class="checkbox-label" (click)="toggleDisponible(true)">
-            <input type="checkbox" [checked]="disponible === true" readonly />
-            <span class="custom-checkbox"></span>
-            <span>En existencia</span>
-          </label>
-          <label class="checkbox-label" (click)="toggleDisponible(false)">
-            <input type="checkbox" [checked]="disponible === false" readonly />
-            <span class="custom-checkbox"></span>
-            <span>Agotado</span>
-          </label>
-        </div>
-      }
-    </div>
-
-    <!-- Botón de aplicar en móvil -->
-    <div class="mobile-drawer-footer">
-      <button class="btn-apply-mobile" (click)="toggleMobileDrawer()">
-        Ver {{ totalElements }} productos
-      </button>
-    </div>
-  </aside>
-
-  <!-- Contenido de Productos -->
-  <section class="products-section">
-    <!-- Barra dinámica de Chips de filtros activos -->
-    @if (getActiveFiltersCount() > 0) {
-      <div class="active-chips-bar">
-        <span class="chips-label">Filtros aplicados:</span>
-
-        @if (q) {
-          <span class="chip">
-            "{{ q }}"
-            <button (click)="q = ''; applyFilters(0)" aria-label="Quitar búsqueda">×</button>
-          </span>
-        }
-        @for (cat of selectedCategories; track cat) {
-          <span class="chip chip--cat">
-            {{ cat }}
-            <button (click)="toggleCategory(cat)" aria-label="Quitar categoría">×</button>
-          </span>
-        }
-        @for (s of selectedTallas; track s) {
-          <span class="chip chip--size">
-            Talla: {{ s }}
-            <button (click)="toggleTalla(s)" aria-label="Quitar talla">×</button>
-          </span>
-        }
-        @for (col of selectedColors; track col) {
-          <span class="chip chip--color">
-            <span class="chip-dot" [style.background-color]="getColorHex(col)"></span>
-            {{ col }}
-            <button (click)="toggleColor(col)" aria-label="Quitar color">×</button>
-          </span>
-        }
-        @if (disponible !== null) {
-          <span class="chip">
-            {{ disponible ? 'En existencia' : 'Agotado' }}
-            <button (click)="disponible = null; applyFilters(0)">×</button>
-          </span>
-        }
-        @if (minPrecio != null || maxPrecio != null) {
-          <span class="chip">
-            S/ {{ minPrecio || 0 }} - S/ {{ maxPrecio || '...' }}
-            <button (click)="minPrecio = null; maxPrecio = null; applyFilters(0)">×</button>
-          </span>
-        }
-
-        <button class="btn-clear-all" (click)="resetFilters()">Limpiar todo</button>
-      </div>
-    }
-
-    <!-- Skeletons durante carga (Zero Layout Shift) -->
-    @if (loading()) {
-      <div class="product-grid" [class.product-grid--compact]="gridDensity === 'compact'">
-        @for (item of [1,2,3,4,5,6]; track item) {
-          <div class="product-card skeleton-card">
-            <div class="skeleton skeleton-media"></div>
-            <div class="skeleton skeleton-tag"></div>
-            <div class="skeleton skeleton-title"></div>
-            <div class="skeleton skeleton-price"></div>
-          </div>
-        }
-      </div>
-    }
-
-    <!-- Estado de Error -->
-    @if (error()) {
-      <p class="error-box">{{ error() }}</p>
-    }
-
-    <!-- Estado Vacío -->
-    @if (!loading() && products().length === 0) {
-      <div class="empty-state">
-        <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <circle cx="11" cy="11" r="8"/>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
-        <h3>No se encontraron coincidencias</h3>
-        <p>Prueba ajustando o quitando algunos de los filtros seleccionados.</p>
-        <button class="btn-pill-orange" (click)="resetFilters()">Restablecer filtros</button>
-      </div>
-    }
-
-    <!-- Grid de Productos (Estilo Nietux: 3:4 portrait, esquinas redondeadas) -->
-    @if (!loading() && products().length > 0) {
-      <div class="product-grid" [class.product-grid--compact]="gridDensity === 'compact'">
-        @for (product of products(); track product.id) {
-          <article class="product-card" (click)="openDetail(product)">
-            <div class="product-media">
-              @if (product.imageUrl) {
-                <img [src]="product.imageUrl" [alt]="product.name" loading="lazy" />
-              }
-              <button
-                class="quick-add-btn"
-                title="Agregar al carrito"
-                (click)="addToCart(product, $event)"
-                [disabled]="product.stock === 0"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M12 5v14M5 12h14"/>
-                </svg>
-              </button>
-            </div>
-
-            <div class="product-info">
-              <span class="product-category">{{ product.categoryName || 'Catálogo' }}</span>
-              <h3 class="product-title">{{ product.name }}</h3>
-
-              <div class="product-stars">
-                <span class="star-rating">★★★★★</span>
-                <span class="review-count">(5.0)</span>
-              </div>
-
-              <div class="product-pricing">
-                <span class="price-current">{{ product.price | currency: 'S/ ' }}</span>
-                @if (product.stock > 0) {
-                  <span class="stock-status stock-in">En stock</span>
-                } @else {
-                  <span class="stock-status stock-out">Agotado</span>
-                }
-              </div>
-            </div>
-          </article>
-        }
-      </div>
-
-      <!-- Paginación estilo Nietux -->
-      @if (totalPages > 1) {
-        <nav class="pagination-wrapper" aria-label="Navegación de páginas">
-          <button
-            class="page-btn page-arrow"
-            [disabled]="page === 0"
-            (click)="applyFilters(page - 1)"
-          >
-            ‹ Anterior
-          </button>
-
-          <span class="page-current">Página {{ page + 1 }} de {{ totalPages }}</span>
-
-          <button
-            class="page-btn page-arrow"
-            [disabled]="page >= totalPages - 1"
-            (click)="applyFilters(page + 1)"
-          >
-            Siguiente ›
-          </button>
-        </nav>
-      }
-    }
-  </section>
-</div>
-
-<!-- MODAL DE DETALLE DE PRODUCTO (Galería, Variantes con Stock, Reseñas y Fotos) -->
+<!-- MODAL DE DETALLE DE PERFUME (Galería, Pirámide/Notas, Variantes Frasco/Decant, Reseñas) -->
 @if (isDetailOpen()) {
   <div class="modal-backdrop" (click)="closeDetail()">
     <div class="modal-card" (click)="$event.stopPropagation()">
-      <button class="modal-close" (click)="closeDetail()" aria-label="Cerrar modal">×</button>
+      <button type="button" class="modal-close" (click)="closeDetail()" aria-label="Cerrar detalle">×</button>
 
       @if (detailLoading()) {
         <div class="modal-loading">
           <div class="spinner"></div>
-          <p>Cargando detalles del producto...</p>
+          <p>Cargando ficha olfativa...</p>
         </div>
       }
 
       @if (!detailLoading() && selectedProduct()) {
         <div class="modal-content">
-          <!-- Columna Izquierda: Galería (producto_imagen) -->
+          <!-- Galería -->
           <div class="detail-gallery">
             <div class="main-image-box">
               <img [src]="activeImage()" [alt]="selectedProduct().name" />
@@ -516,26 +711,48 @@
             }
           </div>
 
-          <!-- Columna Derecha: Información, Variantes con Stock y Reseñas -->
+          <!-- Ficha Olfativa y Compra -->
           <div class="detail-info">
-            <span class="badge-cat">{{ selectedProduct().categoryName || 'Catálogo' }}</span>
+            <div class="detail-meta-top">
+              <span class="detail-brand">{{ selectedProduct().brand || 'ALTA PERFUMERÍA' }}</span>
+              @if (selectedProduct().concentration) {
+                <span class="detail-conc-pill">{{ selectedProduct().concentration }}</span>
+              }
+              @if (selectedProduct().olfactoryFamily) {
+                <span class="detail-family-pill">{{ selectedProduct().olfactoryFamily }}</span>
+              }
+            </div>
+
             <h2 class="detail-title">{{ selectedProduct().name }}</h2>
 
             <div class="detail-price-box">
               <strong class="detail-price">
-                {{ (selectedVariant()?.price || selectedProduct().price) | currency: 'S/ ' }}
+                S/. {{ (selectedVariant()?.price || selectedProduct().price) | number: '1.2-2' }}
               </strong>
+              @if (selectedProduct().originalPrice && !selectedVariant()) {
+                <span class="detail-price-old">S/. {{ selectedProduct().originalPrice | number: '1.2-2' }}</span>
+              }
               <span class="stock-pill" [class.stock-pill--low]="(selectedVariant()?.stock ?? selectedProduct().stock) < 5">
-                Stock: {{ selectedVariant() ? selectedVariant().stock : selectedProduct().stock }} disponibles
+                {{ selectedVariant() ? selectedVariant().stock : selectedProduct().stock }} en stock Lima
               </span>
             </div>
 
             <p class="detail-desc">{{ selectedProduct().description }}</p>
 
-            <!-- Selector de Variantes (producto_variante + atributo_valor) -->
+            @if (selectedProduct().notes) {
+              <div class="olfactory-notes-box">
+                <span class="notes-eyebrow">ACORDES &amp; NOTAS PRINCIPALES</span>
+                <p>{{ selectedProduct().notes }}</p>
+                @if (selectedProduct().occasion) {
+                  <small>Ideal para: {{ selectedProduct().occasion }}</small>
+                }
+              </div>
+            }
+
+            <!-- Selector de Presentación (Frasco Sellado / Decant 10ml / Muestra 5ml) -->
             @if (selectedProduct().variantes && selectedProduct().variantes.length > 0) {
               <div class="variant-selector">
-                <label class="selector-label">Selecciona una Variante / Talla & Color:</label>
+                <label class="selector-label">ELIGE PRESENTACIÓN:</label>
                 <div class="variant-cards">
                   @for (v of selectedProduct().variantes; track v.id) {
                     <button
@@ -544,10 +761,10 @@
                       [class.variant-btn--active]="selectedVariant()?.id === v.id"
                       (click)="selectVariant(v)"
                     >
-                      <span class="variant-sku">{{ v.sku }}</span>
+                      <span class="variant-price">S/. {{ v.price | number: '1.0-0' }}</span>
                       <div class="variant-attrs">
                         @for (attr of v.attributes; track attr.id) {
-                          <span class="attr-tag">{{ attr.attribute }}: {{ attr.value }}</span>
+                          <span class="attr-tag">{{ attr.value }}</span>
                         }
                       </div>
                       <small class="variant-stock">Stock: {{ v.stock }}</small>
@@ -558,27 +775,27 @@
             }
 
             <button
+              type="button"
               class="btn-add-main"
               (click)="addToCartFromDetail()"
               [disabled]="(selectedVariant() ? selectedVariant().stock : selectedProduct().stock) === 0"
             >
-              {{ (selectedVariant() ? selectedVariant().stock : selectedProduct().stock) === 0 ? 'Agotado' : 'Agregar al Carrito' }}
+              {{ (selectedVariant() ? selectedVariant().stock : selectedProduct().stock) === 0 ? 'AGOTADO' : 'AGREGAR A LA BOLSA' }}
             </button>
 
-            <!-- Sección de Reseñas y Fotos (producto_review + review_foto) -->
+            <!-- Reseñas -->
             <div class="reviews-section">
               <div class="reviews-header">
-                <h3>Reseñas y Fotos de Clientes ({{ reviews().length }})</h3>
+                <h3>Reseñas Verificadas ({{ reviews().length }})</h3>
               </div>
 
               @if (reviewMessage()) {
                 <div class="toast-success">{{ reviewMessage() }}</div>
               }
 
-              <!-- Lista de Reseñas -->
               <div class="reviews-list">
                 @if (reviews().length === 0) {
-                  <p class="no-reviews">Aún no hay reseñas para este producto. ¡Sé el primero en opinar!</p>
+                  <p class="no-reviews">Sé el primero en compartir tu impresión olfativa sobre esta fragancia.</p>
                 }
                 @for (rev of reviews(); track rev.id) {
                   <div class="review-card">
@@ -599,34 +816,29 @@
                 }
               </div>
 
-              <!-- Formulario para agregar Reseña con Foto -->
               <div class="add-review-box">
-                <h4>Deja tu reseña</h4>
+                <h4>Comparte tu reseña</h4>
                 <div class="form-row">
-                  <input
-                    type="text"
-                    [(ngModel)]="newReview.userName"
-                    placeholder="Tu nombre completo"
-                  />
+                  <input type="text" [(ngModel)]="newReview.userName" placeholder="Tu nombre" />
                   <select [(ngModel)]="newReview.rating">
-                    <option [value]="5">⭐⭐⭐⭐⭐ (5 estrellas)</option>
-                    <option [value]="4">⭐⭐⭐⭐ (4 estrellas)</option>
-                    <option [value]="3">⭐⭐⭐ (3 estrellas)</option>
-                    <option [value]="2">⭐⭐ (2 estrellas)</option>
-                    <option [value]="1">⭐ (1 estrella)</option>
+                    <option [value]="5">★★★★★ (5)</option>
+                    <option [value]="4">★★★★☆ (4)</option>
+                    <option [value]="3">★★★☆☆ (3)</option>
+                    <option [value]="2">★★☆☆☆ (2)</option>
+                    <option [value]="1">★☆☆☆☆ (1)</option>
                   </select>
                 </div>
                 <textarea
                   [(ngModel)]="newReview.comment"
-                  rows="3"
-                  placeholder="Escribe tu opinión sobre el producto..."
+                  rows="2"
+                  placeholder="Cuéntanos sobre su proyección, fijación y aroma..."
                 ></textarea>
                 <input
                   type="url"
                   [(ngModel)]="newReview.photoUrl"
-                  placeholder="URL de foto opcional (ej. https://images.unsplash.com/...)"
+                  placeholder="URL de foto opcional"
                 />
-                <button class="btn-submit-review" (click)="submitReview()">Publicar Reseña</button>
+                <button type="button" class="btn-submit-review" (click)="submitReview()">Publicar Reseña</button>
               </div>
             </div>
           </div>

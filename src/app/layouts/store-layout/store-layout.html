@@ -1,138 +1,347 @@
-<!-- Barra superior informativa -->
-<div class="top-banner">
-  <div class="top-banner__inner">
-    <span>🚚 <strong>Envío Gratis</strong> a todo el Perú en compras mayores a S/ 300.00</span>
-    <span class="banner-separator">•</span>
-    <span>📞 WhatsApp: <strong>+51 987 654 321</strong></span>
-    <span class="banner-separator">•</span>
-    <span>📍 Sede Lima: San Isidro</span>
+<!-- Barra superior de anuncio Haute Parfumerie -->
+<div class="announcement-bar">
+  <div class="announcement-bar__inner">
+    <span>ENVÍOS EXPRESS EN LIMA Y PROVINCIAS</span>
+    <span class="dot">·</span>
+    <span>FRAGANCIAS 100% ORIGINALES &amp; DECANTS OFICIALES</span>
+    <span class="dot hide-sm">·</span>
+    <span class="hide-sm">ENVÍO GRATIS DESDE S/. 300</span>
   </div>
 </div>
 
-<!-- Barra de navegación principal de la tienda -->
-<header class="navbar">
-  <div class="navbar__inner">
-    <a class="brand" routerLink="/">
-      <img [src]="brand.logoUrl" [alt]="brand.name" />
-      <span>
-        <strong>{{ brand.name }}</strong>
-        <small>{{ brand.tagline }}</small>
-      </span>
-    </a>
+<!-- Header Principal + Menú Secundario de Colecciones & Marcas Nicho -->
+<div class="site-header-sticky">
+  <header class="main-header">
+    <div class="main-header__inner">
+      <!-- Izquierda: Logo & Wordmark -->
+      <a class="brand-lockup" href="/" (click)="onBrandClick($event)" aria-label="Inicio Aroma Atelier">
+        <img [src]="brand.logoUrl" [alt]="brand.name" class="brand-lockup__icon" />
+        <div class="brand-lockup__text">
+          <strong class="brand-lockup__name">{{ brand.name }}</strong>
+          <small class="brand-lockup__tagline">{{ brand.tagline }}</small>
+        </div>
+      </a>
 
-    <nav class="nav-links">
-      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-        Catálogo
-      </a>
-      <a routerLink="/orders" routerLinkActive="active">
-        🔍 Rastrear Pedido
-      </a>
-      <a routerLink="/contact" routerLinkActive="active">
-        Contacto
-      </a>
-      <button type="button" class="cart-pill" (click)="openCart($event)" aria-label="Abrir carrito">
-        <span class="cart-icon">🛒</span>
-        <span>Carrito</span>
-        <span class="badge">{{ cart.count() }}</span>
+      <!-- Centro: Buscador Olfativo Global -->
+      <form class="header-search" (submit)="$event.preventDefault(); onHeaderSearchSubmit()">
+        <svg class="header-search__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <circle cx="11" cy="11" r="7.5" />
+          <path d="m20 20-3.8-3.8" stroke-linecap="round" />
+        </svg>
+        <input
+          type="text"
+          class="header-search__input"
+          [ngModel]="catalogFilter.searchQuery()"
+          (ngModelChange)="onHeaderSearchInput($event)"
+          name="globalPerfumeSearch"
+          placeholder="Buscar por fragancia, marca, nota olfativa..."
+          autocomplete="off"
+        />
+        @if (catalogFilter.searchQuery()) {
+          <button
+            type="button"
+            class="header-search__clear"
+            (click)="clearHeaderSearch()"
+            aria-label="Limpiar búsqueda"
+          >
+            ×
+          </button>
+        } @else {
+          <span class="header-search__hint" title="Ej: Vainilla, Layton, Oud, Tom Ford">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <line x1="4" y1="6" x2="20" y2="6" />
+              <line x1="7" y1="12" x2="17" y2="12" />
+              <line x1="10" y1="18" x2="14" y2="18" />
+            </svg>
+          </span>
+        }
+      </form>
+
+      <!-- Derecha: Moneda, Favoritos, Bolsa, Cuenta -->
+      <div class="header-actions">
+        <span class="currency-pill" title="Precios en Soles Peruanos">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" />
+          </svg>
+          <span>S/. PEN</span>
+        </span>
+
+        <button
+          type="button"
+          class="icon-action-btn"
+          [class.icon-action-btn--active]="catalogFilter.activeTab() === 'favoritos'"
+          (click)="toggleFavoritesView()"
+          title="Mis fragancias favoritas"
+          aria-label="Mis fragancias favoritas"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            [attr.fill]="catalogFilter.activeTab() === 'favoritos' ? 'currentColor' : 'none'"
+            stroke="currentColor"
+            stroke-width="1.8"
+          >
+            <path
+              d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+            />
+          </svg>
+          @if (catalogFilter.wishlistCount() > 0) {
+            <span class="action-badge action-badge--gold">{{ catalogFilter.wishlistCount() }}</span>
+          }
+        </button>
+
+        <button
+          type="button"
+          class="icon-action-btn"
+          (click)="openCart($event)"
+          title="Abrir bolsa de compra"
+          aria-label="Abrir bolsa de compra"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M6 7h12l-1 13H7L6 7z" stroke-linejoin="round" />
+            <path d="M9 7V5a3 3 0 0 1 6 0v2" stroke-linecap="round" />
+          </svg>
+          <span class="action-badge">{{ cart.count() }}</span>
+        </button>
+
+        <!-- Menú de Cuenta / Pedidos / Admin -->
+        <div class="user-menu-wrap">
+          <button
+            type="button"
+            class="user-avatar-btn"
+            (click)="toggleUserMenu()"
+            aria-label="Menú de cliente y administración"
+            title="Pedidos, Contacto y Administración"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <circle cx="12" cy="8.5" r="3.5" />
+              <path d="M5 20a7 7 0 0 1 14 0" stroke-linecap="round" />
+            </svg>
+          </button>
+
+          @if (isUserMenuOpen()) {
+            <div class="user-dropdown">
+              <div class="user-dropdown__header">
+                <span>Atención &amp; Cuenta</span>
+                <small>{{ brand.name }}</small>
+              </div>
+              <a routerLink="/orders" class="user-dropdown__item" (click)="closeUserMenu()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <rect x="3" y="4" width="18" height="16" rx="2" />
+                  <path d="M7 9h10M7 13h6" />
+                </svg>
+                <span>Rastrear mi Pedido</span>
+              </a>
+              <a routerLink="/contact" class="user-dropdown__item" (click)="closeUserMenu()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                </svg>
+                <span>Asesoría &amp; Contacto</span>
+              </a>
+              <div class="user-dropdown__divider"></div>
+              <a routerLink="/admin" class="user-dropdown__item user-dropdown__item--admin" (click)="closeUserMenu()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <rect x="5" y="11" width="14" height="10" rx="2" />
+                  <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+                </svg>
+                <span>Acceso Administrativo</span>
+              </a>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Sub-Menú de Navegación de Perfumería (Centrado, con Mega-Menú de Marcas Nicho) -->
+  <nav class="category-menubar" aria-label="Colecciones de perfumería">
+    <div class="category-menubar__inner">
+      <button
+        type="button"
+        class="menu-link"
+        [class.menu-link--active]="isOnHomeRoute()"
+        (click)="onBrandClick($event)"
+      >
+        INICIO
       </button>
-    </nav>
-  </div>
-</header>
 
-<!-- Contenido de las páginas de la tienda -->
+      @for (item of navItems; track item.key) {
+        @if (item.hasMegaMenu) {
+          <div
+            class="mega-menu-trigger-wrap"
+            (mouseenter)="openNicheMenu()"
+            (mouseleave)="scheduleCloseNicheMenu()"
+          >
+            <button
+              type="button"
+              class="menu-link menu-link--niche"
+              [class.menu-link--active]="isOnCatalogRoute() && catalogFilter.activeTab() === item.key"
+              (click)="selectNavTab(item.key)"
+            >
+              <span>{{ item.label }}</span>
+              <svg class="menu-chevron" [class.menu-chevron--open]="isNicheMenuOpen()" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+              </svg>
+            </button>
+
+            @if (isNicheMenuOpen()) {
+              <div
+                class="niche-mega-menu"
+                (mouseenter)="openNicheMenu()"
+                (mouseleave)="scheduleCloseNicheMenu()"
+              >
+                <div class="mega-col">
+                  <span class="mega-col__eyebrow">ALTA PERFUMERÍA INDEPENDIENTE</span>
+                  <h4 class="mega-col__title">Casas Nicho</h4>
+                  <ul class="mega-list">
+                    @for (house of nicheHouses; track house.name) {
+                      <li>
+                        <button type="button" class="mega-house-btn" (click)="selectHouseBrand(house.name)">
+                          <strong>{{ house.name }}</strong>
+                          <small>{{ house.origin }}</small>
+                        </button>
+                      </li>
+                    }
+                  </ul>
+                </div>
+
+                <div class="mega-col">
+                  <span class="mega-col__eyebrow">COLECCIONES PRIVADAS</span>
+                  <h4 class="mega-col__title">Diseñador Exclusivo</h4>
+                  <ul class="mega-list">
+                    @for (house of designerHouses; track house.name) {
+                      <li>
+                        <button type="button" class="mega-house-btn" (click)="selectHouseBrand(house.name)">
+                          <strong>{{ house.name }}</strong>
+                          <small>{{ house.origin }}</small>
+                        </button>
+                      </li>
+                    }
+                  </ul>
+
+                  <div class="mega-quick-links">
+                    <button type="button" class="mega-pill-btn" (click)="selectNavTab('decants')">
+                      Decants Oficiales 5ml / 10ml
+                    </button>
+                    <button type="button" class="mega-pill-btn" (click)="selectNavTab('ocasiones')">
+                      Fragancias de Gala &amp; Noche
+                    </button>
+                  </div>
+                </div>
+
+                <div class="mega-spotlight">
+                  <span class="mega-spotlight__tag">CURADURÍA EXCLUSIVA</span>
+                  <h5>Descubre el Universo Nicho</h5>
+                  <p>
+                    Extractos puros de alta maceración, materias primas naturales y lotes 100% verificados con entrega express en Lima.
+                  </p>
+                  <button type="button" class="mega-spotlight__cta" (click)="selectNavTab('nicho')">
+                    Ver todas las Casas Nicho →
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <button
+            type="button"
+            class="menu-link"
+            [class.menu-link--active]="isOnCatalogRoute() && catalogFilter.activeTab() === item.key"
+            (click)="selectNavTab(item.key)"
+          >
+            {{ item.label }}
+          </button>
+        }
+      }
+    </div>
+  </nav>
+</div>
+
+<!-- Contenido Principal de las Páginas -->
 <main class="store-main">
   <router-outlet />
 </main>
 
-<!-- Pie de página completo de la tienda -->
-<footer class="footer">
-  <div class="footer__inner">
+<!-- Footer Minimalista de Alta Perfumería -->
+<footer class="luxury-footer">
+  <div class="luxury-footer__inner">
     <div class="footer-grid">
-      <!-- Columna 1: Info empresa -->
+      <!-- Columna 1: Marca -->
       <div class="footer-col">
         <div class="footer-brand">
           <img [src]="brand.logoUrl" [alt]="brand.name" class="footer-logo" />
           <div>
-            <h4>{{ brand.name }}</h4>
-            <small class="tagline">{{ brand.tagline }}</small>
+            <h4>{{ brand.name.toUpperCase() }}</h4>
+            <small>{{ brand.tagline }}</small>
           </div>
         </div>
         <p class="footer-desc">
-          Tu tienda de confianza con fragancias exclusivas, envíos seguros a domicilio, agencias Shalom a nivel nacional y recojo gratis en San Isidro.
+          Santuario curatorial del arte perfumista en Perú. Colecciones seleccionadas bajo los más rigurosos estándares de autenticidad y maceración.
         </p>
-        <ul class="footer-contact-list">
-          <li>📍 Av. Javier Prado Este 2465, San Isidro, Lima</li>
-          <li>📱 +51 987 654 321</li>
-          <li>✉️ atencion&#64;mitienda.pe</li>
-        </ul>
+        <div class="authenticity-seal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            <path d="m9 12 2 2 4-4" />
+          </svg>
+          <span>GARANTÍA DE AUTENTICIDAD CERTIFICADA</span>
+        </div>
       </div>
 
-      <!-- Columna 2: Políticas y legales -->
+      <!-- Columna 2: Explorar Colecciones -->
       <div class="footer-col">
-        <h4 class="col-title">Políticas y Legales</h4>
+        <h5 class="footer-col__title">EXPLORAR COLECCIONES</h5>
         <ul class="footer-links">
-          <li><a routerLink="/policies/terminos-y-condiciones">Términos y Condiciones</a></li>
-          <li><a routerLink="/policies/politicas-de-privacidad">Políticas de Privacidad</a></li>
-          <li><a routerLink="/policies/cambios-y-devoluciones">Cambios y Devoluciones</a></li>
-          <li><a routerLink="/policies/libro-de-reclamaciones">📖 Libro de Reclamaciones</a></li>
+          <li><button type="button" (click)="selectNavTab('nicho')">Alta Perfumería Nicho</button></li>
+          <li><button type="button" (click)="selectNavTab('decants')">Decants Auténticos (5ml / 10ml)</button></li>
+          <li><button type="button" (click)="selectNavTab('ocasiones')">Fragancias para Gala &amp; Noche</button></li>
+          <li><button type="button" (click)="selectNavTab('hombre')">Colección Masculina</button></li>
+          <li><button type="button" (click)="selectNavTab('mujer')">Colección Femenina</button></li>
+          <li><button type="button" (click)="selectNavTab('promociones')">Promociones &amp; Ofertas</button></li>
         </ul>
       </div>
 
-      <!-- Columna 3: Seguimiento y Atención -->
+      <!-- Columna 3: Atención al Cliente -->
       <div class="footer-col">
-        <h4 class="col-title">Servicio al Cliente</h4>
+        <h5 class="footer-col__title">ATENCIÓN AL CLIENTE</h5>
         <ul class="footer-links">
-          <li><a routerLink="/orders">🔍 Seguimiento de Pedido</a></li>
-          <li><a routerLink="/cart">🛒 Ver mi Carrito</a></li>
-          <li><a routerLink="/checkout">💳 Checkout y Facturación</a></li>
-          <li><a routerLink="/contact">💬 Contacto y Soporte</a></li>
-          <li class="admin-link-item"><a routerLink="/admin">🔐 Acceso Administrativo</a></li>
+          <li><a routerLink="/contact">Asesoría Olfativa Personalizada</a></li>
+          <li><a routerLink="/orders">Seguimiento de Envíos Express</a></li>
+          <li><a routerLink="/policies/cambios-y-devoluciones">Políticas de Autenticidad y Devolución</a></li>
+          <li><a routerLink="/cart">Mi Bolsa de Compra</a></li>
+          <li class="concierge-line">Concierge WhatsApp: +51 987 654 321</li>
+          <li class="admin-link-item"><a routerLink="/admin">Acceso Administrativo</a></li>
         </ul>
       </div>
 
-      <!-- Columna 4: Newsletter -->
+      <!-- Columna 4: Medios de Pago Seguros -->
       <div class="footer-col">
-        <h4 class="col-title">Boletín Informativo</h4>
-        <p class="newsletter-desc">
-          Suscríbete para recibir promociones exclusivas, lanzamientos y cupones de envío gratis.
+        <h5 class="footer-col__title">MEDIOS DE PAGO SEGUROS</h5>
+        <p class="footer-desc">
+          Transacciones cifradas bajo pasarela certificada con métodos locales preferidos en Perú y recojo en San Isidro.
         </p>
-        <form class="newsletter-form" (submit)="$event.preventDefault(); subscribeNewsletter()">
-          <div class="newsletter-input-group">
-            <input
-              type="email"
-              placeholder="tu-correo@ejemplo.com"
-              [ngModel]="newsletterEmail()"
-              (ngModelChange)="newsletterEmail.set($event)"
-              name="newsletterEmail"
-              required
-            />
-            <button type="submit" [disabled]="newsletterSending()">
-              {{ newsletterSending() ? '...' : 'Suscribirse' }}
-            </button>
-          </div>
-          @if (newsletterMessage()) {
-            <p class="newsletter-msg" [class.success]="newsletterSuccess()" [class.error]="!newsletterSuccess()">
-              {{ newsletterMessage() }}
-            </p>
-          }
-        </form>
-
-        <div class="payment-badges">
-          <span class="badge-item">💳 Visa / Mastercard</span>
-          <span class="badge-item">💜 Yape / Plin</span>
-          <span class="badge-item">🏦 BCP Transferencia</span>
+        <div class="payment-pills">
+          <span>YAPE</span>
+          <span>PLIN</span>
+          <span>VISA</span>
+          <span>MASTERCARD</span>
+          <span>BCP</span>
+        </div>
+        <div class="ssl-note">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="5" y="11" width="14" height="10" rx="2" />
+            <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+          </svg>
+          <span>Cifrado SSL 256-bit de extremo a extremo</span>
         </div>
       </div>
     </div>
 
     <div class="footer-bottom">
-      <p>© 2026 {{ brand.name }}. RUC: 20608912345. Todos los derechos reservados.</p>
+      <p>© 2026 {{ brand.name }} Perú S.A.C. Todos los derechos reservados.</p>
       <div class="footer-bottom-links">
-        <a routerLink="/policies/terminos-y-condiciones">Términos</a>
-        <span>·</span>
+        <a routerLink="/policies/terminos-y-condiciones">Términos y Condiciones</a>
         <a routerLink="/policies/politicas-de-privacidad">Privacidad</a>
-        <span>·</span>
-        <a routerLink="/admin">Admin</a>
+        <a routerLink="/policies/libro-de-reclamaciones">Libro de Reclamaciones</a>
       </div>
     </div>
   </div>
