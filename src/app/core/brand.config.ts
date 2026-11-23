@@ -11,7 +11,7 @@ export interface BrandConfig {
 export const BRAND_CONFIG: BrandConfig = {
   tenantCode: 'perfumeria-demo',
   name: 'Aroma Atelier',
-  tagline: 'Alta Perfumería',
+  tagline: 'Haute Parfumerie',
   logoUrl: '/logo-perfumeria.svg',
-  currency: 'PEN ',
+  currency: 'S/. ',
 };

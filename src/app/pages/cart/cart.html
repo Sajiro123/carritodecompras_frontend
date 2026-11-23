@@ -9,7 +9,7 @@
       <div class="empty-icon">🛒</div>
       <h2>Tu carrito está vacío</h2>
       <p>Aún no has agregado ningún producto a tu carrito de compras.</p>
-      <a class="btn-primary" routerLink="/">Ver Catálogo de Productos</a>
+      <a class="btn-primary" routerLink="/catalogo">Ver Catálogo de Productos</a>
     </div>
   } @else {
     <!-- Barra de progreso de envío gratis (S/ 300) -->
@@ -130,7 +130,7 @@
         </table>
 
         <div class="table-card-footer">
-          <a routerLink="/" class="btn-continue-shopping">← Seguir explorando productos</a>
+          <a routerLink="/catalogo" class="btn-continue-shopping">← Seguir explorando productos</a>
           <button type="button" class="btn-clear-cart" (click)="cart.clear()">Vaciar carrito</button>
         </div>
       </div>
